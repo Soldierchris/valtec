@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALTEC - Inventario Bodega</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            height: 100vh;
+            background: #212529;
+            color: white;
+            padding: 20px;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilo para que el autocompletado flote sobre el modal */
+        /* Agrégalo dentro de <style> en index.html */
+/* Esto fuerza a que las listas floten sobre cualquier modal */
+#sugerencias, #sugerencias-ent, #sugerencias-colab {
+    background-color: white !important;
+    z-index: 10500 !important; /* Valor mayor al del modal de Bootstrap */
+    display: none; 
+    position: absolute !important;
+    width: 100%;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+/* Evita que los elementos de la lista sean transparentes */
+.list-group-item {
+    background-color: white !important;
+    color: black !important;
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+         
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar"> <!-- BOTONES DEL MENU LATERAL -->
+                <h4>VALTEC</h4>
+                <hr>
+                <button class="btn btn-outline-light w-100 mb-2" onclick="cargarFormularios('LATAM')">Reporte
+                    LATAM</button>
+                <button class="btn btn-outline-light w-100 mb-2" onclick="cargarFormularios('SKY')">Reporte SKY</button>
+                <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarTablets()">Listado Tablets</button>
+                <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalColaborador">+
+                    Nuevo Colaborador</button>
+                <button class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalProducto">+
+                    Nuevo Producto</button>
+                <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalIngreso">+ Nuevo
+                    Ingreso</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarIngreso()">Registrar Movimiento</button>
+                <button class="btn btn-warning w-100 mb-2" data-bs-toggle="modal"
+                    data-bs-target="#modalEntrega">Registrar Movimiento (Entrega)</button>
+            </div>
+
+            <main class="col-md-10 p-4">
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" id="titulo-reporte">Panel de Inventario</h1>
+                </div>
+
+                <div class="card p-4">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Descripción</th>
+                                    <th>N.º de serie</th>
+                                    <th>Stock Disponible</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-cuerpo">
+                                <tr>
+                                    <td colspan="4" class="text-center">Seleccione un reporte del menú lateral</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="modalColaborador" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">📦 Registro de Nuevo Colaborador</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formColaborador" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">RUT (sin puntos, con guion)</label>
+                            <input type="text" class="form-control" id="rut" placeholder="12345678-9" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Primer Nombre</label>
+                            <input type="text" class="form-control" id="nombre1" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Segundo Nombre</label>
+                            <input type="text" class="form-control" id="nombre2">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Primer Apellido</label>
+                            <input type="text" class="form-control" id="apellido1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Segundo Apellido</label>
+                            <input type="text" class="form-control" id="apellido2">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" id="cargo" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sector / Área</label>
+                            <select class="form-select" id="sector" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Operaciones">Operaciones</option>
+                                <option value="Vuelo">Vuelo</option>
+                                <option value="Logística">Logística</option>
+                                <option value="Seguridad">Seguridad</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Teléfono 1</label>
+                            <input type="text" class="form-control" id="telefono1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Teléfono 2</label>
+                            <input type="text" class="form-control" id="telefono2">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" id="mail">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarColaborador()">Guardar
+                        Colaborador</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js"></script>
+
+
+
+   <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-dark">
+                <h5 class="modal-title">📦 Registrar Nuevo Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formProducto" class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Descripción del Producto</label>
+                        <input type="text" class="form-control" id="prod-descripcion" placeholder="Ej: iPad 9th Gen o Guía Latam" required>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Categoría</label>
+                        <select class="form-select" id="prod-categoria" onchange="verificarCategoria(this.value)" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Seguridad">Seguridad</option>
+                            <option value="Suministro">Suministro</option>
+                            <option value="Formulario">Formulario</option>
+                        </select>
+                    </div>
+
+                  <div id="campos-serializados" style="display: none;" class="row g-3 mt-1 p-2 bg-light border rounded">
+    <p class="text-muted mb-1"><small>Información de Activo Fijo:</small></p>
+    <div class="col-md-6">
+        <label class="form-label">Modelo</label>
+        <input type="text" class="form-control" id="prod-modelo">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">N° de Serie</label>
+        <input type="text" class="form-control" id="prod-serie">
+    </div>
+</div>
+
+<div id="campos-formularios" style="display: none;" class="row g-3 mt-1 p-2 bg-light border rounded">
+    <p class="text-muted mb-1"><small>Detalle de Documentación:</small></p>
+    <div class="col-md-6">
+        <label class="form-label">Aerolínea</label>
+        <select class="form-select" id="prod-aerolinea">
+            <option value="">Seleccione...</option>
+            <option value="LATAM">LATAM</option>
+            <option value="SKY">SKY</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Tipo de Documento</label>
+        <input type="text" class="form-control" id="prod-tipo-doc" placeholder="Ej: Guía de Despacho">
+    </div>
+</div>
+
+<div id="campos-suministros" style="display: none;" class="row g-3 mt-1 p-2 bg-light border rounded">
+    <p class="text-muted mb-1"><small>Detalle de Insumo:</small></p>
+    <div class="col-md-6">
+        <label class="form-label">Marca</label>
+        <input type="text" class="form-control" id="prod-marca">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Medida / Unidad</label>
+        <input type="text" class="form-control" id="prod-medida" placeholder="Ej: 500ml, Pack x4">
+    </div>
+</div>  
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-info" onclick="guardarProducto()">Guardar Producto</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <div class="modal fade" id="modalIngreso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-arrow-down-right"></i> Registro de Ingreso (Bodega Central)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-movimiento-ingreso" class="row g-3">
+                    <div class="col-md-9 position-relative">
+                        <label class="form-label fw-bold">Producto (Escriba para buscar)</label>
+                        <input type="text" id="buscar-producto" class="form-control" placeholder="Ej: iPad o Formulario..." autocomplete="off">
+                        
+                        <input type="hidden" id="id_articulo">
+                        
+                       <ul id="sugerencias" class="list-group position-absolute w-100 shadow"
+    style="display:none; max-height: 200px; overflow-y: auto; background-color: white !important; z-index: 10000 !important;">
+</ul>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">ID</label>
+                        <input type="text" id="display-id" class="form-control bg-light fw-bold text-primary" readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Ubicación</label>
+                        <select id="ubicacion" class="form-select">
+                            <option value="Bodega Grande">Bodega Grande</option>
+                            <option value="Bodega Chica">Bodega Chica</option>
+                            <option value="Bodega Seguridad">Bodega Seguridad</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" id="cantidad" class="form-control" value="1" min="1">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Categoría Detectada</label>
+                        <input type="text" id="categoria-detectada" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div id="panel-dinamico" class="col-12 mt-3 p-3 rounded border d-none"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarIngreso()">Confirmar Ingreso</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <div class="modal fade" id="modalEntrega" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-shipping-fast"></i> Registro de Entrega (Salida de Bodega)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEntrega" class="row g-3">
+
+                    <div class="col-md-6 position-relative">
+                        <label class="form-label fw-bold">RUT Colaborador (Quién recibe)</label>
+                        <input type="text" id="rut-colaborador" class="form-control" placeholder="Escriba RUT o Nombre..." autocomplete="off">
+                        <ul id="sugerencias-colab" class="list-group position-absolute w-100 shadow"
+                            style="display:none; background: white !important; max-height: 200px; overflow-y: auto; z-index: 10000 !important;"></ul>
+                    </div>
+
+                    <div class="col-md-6 position-relative">
+                        <label class="form-label fw-bold">Producto (Buscar por nombre)</label>
+                        <input type="text" id="buscar-producto-ent" class="form-control" placeholder="Escriba para buscar..." autocomplete="off">
+                        
+                        <input type="hidden" id="id-articulo-ent">
+                        
+                       <ul id="sugerencias-ent" class="list-group position-absolute w-100 shadow" 
+    style="display:none; background-color: white !important; max-height: 200px; overflow-y: auto; z-index: 10000 !important;">
+</ul>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">ID Artículo</label>
+                        <input type="text" id="display-id-ent" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Categoría</label>
+                        <input type="text" id="cat-ent" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Bodega Origen</label>
+                        <select id="bodega-origen" class="form-select">
+                            <option value="Bodega Grande">Bodega Grande</option>
+                            <option value="Bodega Chica">Bodega Chica</option>
+                            <option value="Bodega Seguridad">Bodega Seguridad</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Cantidad a Entregar</label>
+                        <input type="number" id="cant-ent" class="form-control" value="1" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarEntrega()">Confirmar Entrega</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>

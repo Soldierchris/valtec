@@ -1,0 +1,46 @@
+Ahora vamos con la tabla movimientos, la cual tiene 4 tipos de movimientos('Ingreso','Entrega','Devolución','Traslado')
+(A)La opción ingreso, un campo para colocar el detalle y que aladito se muestre el id del articulo al momento de escribir el detalle, pero  al momento de escribir el detalle ( pero detalle que se vaya mostrando el resto de la descripción del producto,)  y un campo para asignar la  ubicacion ( bodega 1,2,3 pero el nombre, bodega grande, bodega chica, bodega seguridad ) otro campo para ingresar la cantidad  y la categoría y el usuario por defecto si es posible BODEGA CENTRAL.
+Si la categoria es tablet se despliegue un campo para ingresar el numero de serie y que sea obligatorio y modelo
+
+Si la categoria es formulario se despliegue un campo para escoger si es SKY, latam u otro (asi como esta anteriormente) ( tipo de documento, y correlativo inicial no son necesarios, pero no se si exista problema al guardarlos en la base de datos
+
+SI la categoría es suministro un campo para digitar marca y medida
+Si es tablet que se despliegue donde digitar numero de serie y que sea obligatorio
+
+
+y que visualmente se vea profesional y bonito 
+
+
+(B)La opción Entrega, debe de tener el rut del colaborador, (id del artticulo -opcional pero que se muestre al momento de escogerlo en la descripocion)la descripción del articulo (que uno vaya escribiendo y y se vaya mostrando nombre del articulo completo, de los que estan en la base de datos) y que muestre la categoria,  que se valide si existe en la tabla producto y este coincida, (no se si es redundante )la bodega de desde donde se entrega, fecha de movimiento, la cantidad, el id del usuario debodega ( que por el momento puede ser uno por default, ) y la fecha del movimiento me imagino es automática ( indicame si me faltaría algún campo que pudiese servir ) y la cantidad de entrega se reste de la que esta ingresada
+
+y que visualmente se vea profesional y bonito , asi como el anterior :)
+
+(C)En la devolución, que sea por rut,( el rut de la persona que la devuelve ), 
+que en el campo de devolución se seleccione primero la categoria, (Formulario, Tablet, Suministro, Seguridad,) posterior a eso Si es tablet o seguridad, un campo para ingresar el numero de serie, y posterior a ingresarlo dar aceptar y se muestre la descripción del articulo y que colaborador la tiene, se ingresa la cantidad que esta devolviendo y esta se sume al inventario.
+
+y que visualemte se vea profesional y bonito 
+
+
+
+CREATE TABLE `movimiento` (
+  `id_movimiento` int(11) NOT NULL AUTO_INCREMENT,
+  `id_articulo` int(11) NOT NULL,
+  `id_ubicacion` int(11) DEFAULT NULL,
+  `rut_colaborador` varchar(12) DEFAULT NULL,
+  `tipo_movimiento` enum('Ingreso','Entrega','Devolución','Traslado') NOT NULL,
+  `cantidad` int(11) NOT NULL DEFAULT 1,
+  `estado` enum('Disponible','Entregado','En Uso','En Reparación','Baja') DEFAULT 'Disponible',
+  `observacion` text DEFAULT NULL,
+  `fecha_movimiento` timestamp NULL DEFAULT current_timestamp(),
+  `id_usuario_bodega` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id_movimiento`),
+  KEY `id_articulo` (`id_articulo`),
+  KEY `rut_colaborador` (`rut_colaborador`),
+  KEY `fecha_movimiento` (`fecha_movimiento`),
+  KEY `fk_mov_ubicacion` (`id_ubicacion`),
+  KEY `fk_mov_usuario` (`id_usuario_bodega`),
+  CONSTRAINT `fk_mov_colaborador` FOREIGN KEY (`rut_colaborador`) REFERENCES `colaborador` (`rut`) ON DELETE CASCADE,
+  CONSTRAINT `fk_mov_producto` FOREIGN KEY (`id_articulo`) REFERENCES `producto` (`id_articulo`) ON DELETE CASCADE,
+  CONSTRAINT `fk_mov_ubicacion` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicacion` (`id_ubicacion`),
+  CONSTRAINT `fk_mov_usuario` FOREIGN KEY (`id_usuario_bodega`) REFERENCES `usuario_bodega` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
