@@ -108,8 +108,6 @@ async function guardarProducto() {
     }
 }
 
-
-
 // ==========================================
 // 1. CARGA DE TABLTES  
 // ==========================================
@@ -198,11 +196,6 @@ async function guardarColaborador() {
         alert("Error de conexión con el servidor");
     }
 }
-
-
-
-
-
 
 
 // ==========================================
@@ -360,9 +353,9 @@ document.addEventListener('click', (e) => {
     }
 }, true);
 
-// ==========================================
-// 6. REGISTRO DE NUEVO INGRESO (PRODUCTOS)
-// ==========================================
+// =================================================================================================
+// 6. REGISTRO DE NUEVO INGRESO (PRODUCTOS) NO TOCAR AL MOMENTO FUNCIONANDO, TOCAR SOLO PARA MEJORAS
+// =================================================================================================
 async function confirmarIngreso() {
     // Recolectamos los datos usando los IDs que tienes en el modal de ingreso
     const datos = {
