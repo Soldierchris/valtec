@@ -36,6 +36,22 @@ class ProductoRepository {
             throw error;
         }
     }
+    // Agrega este método dentro de la clase ProductoRepository
+async buscar(query) {
+    try {
+        const sql = `
+            SELECT p.id_articulo, p.descripcion, p.categoria
+            FROM producto p
+            WHERE p.descripcion LIKE ?
+            LIMIT 20
+        `;
+        const [rows] = await pool.execute(sql, [`%${query}%`]);
+        return rows;
+    } catch (error) {
+        console.error("Error al buscar productos:", error);
+        throw error;
+    }
+}
 }
 
 module.exports = ProductoRepository;
