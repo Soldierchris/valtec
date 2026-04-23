@@ -198,12 +198,12 @@ async function guardarColaborador() {
 }
 
 
-// ==========================================
-// 2. BUSCADOR DE PRODUCTOS (MODAL INGRESO)
-// ==========================================
+// =================================================================================================
+// 2. BUSCADOR DE PRODUCTOS (MODAL INGRESO) id="modalIngreso ; id="modalEntrega"  id="modalProducto"
+// =================================================================================================
 const inputIngreso = document.getElementById('buscar-producto');
 const listaIngreso = document.getElementById('sugerencias');
-
+/** 
 if (inputIngreso && listaIngreso) {
     inputIngreso.addEventListener('input', async (e) => {
         const texto = e.target.value;
@@ -231,6 +231,35 @@ if (inputIngreso && listaIngreso) {
         } catch (f) { console.error("Error buscador ingreso:", f); }
     });
 }
+*/
+// CORRECCIÓN EN SECCIÓN 2: BUSCADOR DE PRODUCTOS (MODAL INGRESO)
+if (inputIngreso && listaIngreso) {
+    inputIngreso.addEventListener('input', async (e) => {
+        const texto = e.target.value;
+        if (texto.length < 2) { listaIngreso.style.display = 'none'; return; }
+        try {
+            const res = await fetch(`/api/productos/buscar?q=${texto}`);
+            const productos = await res.json();
+            listaIngreso.innerHTML = '';
+            if (productos.length > 0) {
+                listaIngreso.style.display = 'block';
+                productos.forEach(p => {
+                    const item = document.createElement('a');
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `<strong>ID: ${p.id_articulo}</strong> - ${p.descripcion}`;
+                    
+                    // CAMBIO AQUÍ: Llamamos a seleccionarProducto en lugar de hacer la lógica aquí
+                    item.onclick = () => seleccionarProducto(p); 
+                    
+                    listaIngreso.appendChild(item);
+                });
+            }
+        } catch (f) { console.error("Error buscador ingreso:", f); }
+    });
+}
+
+
+
 
 // ==========================================
 // 3. BUSCADOR DE PRODUCTOS (MODAL ENTREGA)
@@ -357,15 +386,32 @@ document.addEventListener('click', (e) => {
 // 6. REGISTRO DE NUEVO INGRESO (PRODUCTOS) NO TOCAR AL MOMENTO FUNCIONANDO, TOCAR SOLO PARA MEJORAS
 // =================================================================================================
 async function confirmarIngreso() {
-    // Recolectamos los datos usando los IDs que tienes en el modal de ingreso
+    // 1. Recolectamos los datos base 
+    const categoria = document.getElementById('categoria-detectada').value;
+    
     const datos = {
         id_articulo: document.getElementById('id_articulo').value,
         cantidad: document.getElementById('cantidad').value,
         ubicacion: document.getElementById('ubicacion').value,
-        id_usuario: 1 // Usuario por defecto
+        id_usuario: 1, // Usuario por defecto 
+        // Campos dinámicos inicializados en null
+        modelo: null,
+        serie: null,
+        aerolinea: null,
+        tipo_documento: null
     };
 
-    // Validación básica
+    // 2. Agregamos los datos según la categoría detectada
+    if (categoria === 'Tablet') {
+        datos.modelo = document.getElementById('modelo-tablet')?.value || null;
+        datos.serie = document.getElementById('serie-tablet')?.value || null;
+    } else if (categoria === 'Seguridad') {
+        datos.serie = document.getElementById('serie-seguridad')?.value || null;
+    } else if (categoria === 'Formulario') {
+        datos.aerolinea = document.getElementById('aerolinea')?.value || null;
+    }
+
+    // 3. Validación básica
     if (!datos.id_articulo || !datos.cantidad || !datos.ubicacion) {
         alert("⚠️ Por favor, complete todos los campos del ingreso.");
         return;
@@ -380,7 +426,7 @@ async function confirmarIngreso() {
 
         if (res.ok) {
             alert("✅ Ingreso registrado correctamente.");
-            location.reload(); // Recarga para actualizar las tablas de stock
+            location.reload(); 
         } else {
             const errorData = await res.json();
             alert("❌ Error al registrar: " + (errorData.error || "Error desconocido"));
@@ -388,5 +434,168 @@ async function confirmarIngreso() {
     } catch (error) {
         console.error("Error en la petición de ingreso:", error);
         alert("Hubo un problema de conexión con el servidor.");
+    }
+}
+
+//======================================================
+// Esta función debe ejecutarse CUANDO EL USUARIO HACE CLIC en un producto de la lista de sugerencias
+// INGRESO DE PRODUCTOS A BODEGA
+//===============================================================
+
+// Esta función se ejecuta cuando haces clic en un resultado de la lista de sugerencias [cite: 12]
+function seleccionarProducto(producto) {
+    // Llenado de campos base [cite: 11, 14, 18]
+    document.getElementById('buscar-producto').value = producto.descripcion;
+    document.getElementById('id_articulo').value = producto.id_articulo;
+    document.getElementById('display-id').value = producto.id_articulo;
+    //document.getElementById('categoria-detectada').value = producto.categoria.value = p.categoria;
+    document.getElementById('categoria-detectada').value = producto.categoria;
+    //actualizarPanelDinamico(p.categoria);
+    actualizarPanelDinamico(producto.categoria);
+
+    // ACTIVACIÓN AUTOMÁTICA: Llamamos a la función que dibuja los campos extras 
+    mostrarCamposPorCategoria(producto.categoria);
+    
+    document.getElementById('sugerencias').style.display = 'none';
+}
+
+function mostrarCamposPorCategoria(categoria) {
+    const panel = document.getElementById('panel-dinamico');
+    panel.innerHTML = ''; // Limpiar previo
+    panel.classList.remove('d-none');
+
+    if (categoria === 'Formulario') {
+        panel.innerHTML = `
+            <label class="form-label fw-bold">Aerolínea</label>
+            <select id="aerolinea" class="form-select">
+                <option value="LATAM">LATAM</option>
+                <option value="SKY">SKY</option>
+                <option value="Otro">Otro</option>
+            </select>`;
+    } else if (categoria === 'Tablet') {
+        panel.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Modelo</label>
+                    <input type="text" id="modelo-tablet" class="form-control" placeholder="Ej: Active 3">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">N° Serie</label>
+                    <input type="text" id="serie-tablet" class="form-control" placeholder="Ingrese S/N">
+                </div>
+            </div>`;
+    } else if (categoria === 'Seguridad') {
+        panel.innerHTML = `
+            <label class="form-label fw-bold">N° Serie / Identificador</label>
+            <input type="text" id="serie-seguridad" class="form-control" placeholder="Tipee el número de serie...">`;
+    } else {
+        panel.classList.add('d-none'); // Ocultar si no aplica
+    }
+}
+/** 
+function actualizarPanelDinamico(categoria) {
+    const panel = document.getElementById('panel-dinamico');
+    panel.innerHTML = ''; // Limpiamos el panel
+    panel.classList.add('d-none'); // Lo ocultamos por defecto
+
+    if (!categoria) return;
+
+    let contenido = '';
+
+    // Lógica por categoría según lo solicitado
+    if (categoria === 'Formulario') {
+        contenido = `
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Aerolínea</label>
+                    <select id="aerolinea" class="form-select" required>
+                        <option value="">Seleccione Aerolínea...</option>
+                        <option value="LATAM">LATAM</option>
+                        <option value="SKY">SKY</option>
+                        <option value="Otro">OTRO</option>
+                    </select>
+                </div>
+            </div>`;
+    } 
+    else if (categoria === 'Seguridad') {
+        contenido = `
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Número de Serie (EPI)</label>
+                    <input type="text" id="serie-seguridad" class="form-control" placeholder="Tipee el número de serie..." required>
+                </div>
+            </div>`;
+    } 
+    else if (categoria === 'Tablet') {
+        contenido = `
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Modelo</label>
+                    <input type="text" id="modelo-tablet" class="form-control" placeholder="Ej: Active 3" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Número de Serie</label>
+                    <input type="text" id="serie-tablet" class="form-control" placeholder="S/N del dispositivo" required>
+                </div>
+            </div>`;
+    }
+
+    if (contenido !== '') {
+        panel.innerHTML = contenido;
+        panel.classList.remove('d-none'); // Mostramos el panel si hay campos nuevos
+    }
+}*/
+
+function actualizarPanelDinamico(categoria) {
+    const panel = document.getElementById('panel-dinamico');
+    if (!panel) return; // Seguridad por si no existe el ID
+
+    panel.innerHTML = ''; // Limpiamos previo
+    panel.classList.add('d-none'); // Ocultamos por defecto
+
+    if (!categoria) return;
+
+    let contenido = '';
+
+    if (categoria === 'Formulario') {
+        contenido = `
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Aerolínea</label>
+                    <select id="aerolinea" class="form-select" required>
+                        <option value="">Seleccione Aerolínea...</option>
+                        <option value="LATAM">LATAM</option>
+                        <option value="SKY">SKY</option>
+                        <option value="Otro">OTRO</option>
+                    </select>
+                </div>
+            </div>`;
+    } 
+    else if (categoria === 'Seguridad') {
+        contenido = `
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Número de Serie (EPI)</label>
+                    <input type="text" id="serie-seguridad" class="form-control" placeholder="Tipee el número de serie..." required>
+                </div>
+            </div>`;
+    } 
+    else if (categoria === 'Tablet') {
+        contenido = `
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Modelo</label>
+                    <input type="text" id="modelo-tablet" class="form-control" placeholder="Ej: Active 3" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Número de Serie</label>
+                    <input type="text" id="serie-tablet" class="form-control" placeholder="S/N del dispositivo" required>
+                </div>
+            </div>`;
+    }
+
+    if (contenido !== '') {
+        panel.innerHTML = contenido;
+        panel.classList.remove('d-none'); // Hacemos visible el panel
     }
 }
