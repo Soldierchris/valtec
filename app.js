@@ -16,7 +16,6 @@ app.use(express.static('public')); // Para servir tu HTML
 
 // Rutas de la API
 app.use('/api/formularios', formularioRoutes);
-//app.use('/api/tablets', require('./src/infrastructure/routes/tabletRoutes'));
 app.use('/api/tablets', tabletRoutes)
 app.use('/api/colaboradores', colaboradorRoutes);
 app.use('/api/productos', productoRoutes);

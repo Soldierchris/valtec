@@ -124,7 +124,9 @@ async function cargarTablets() {
             <th>ID</th>
             <th>Modelo / Serie</th>
             <th>Descripción</th>
+            <th>Cantidad</th>
             <th>Estado</th>
+            <th>Ubicacion</th>
         </tr>
     `;
 
@@ -137,13 +139,16 @@ async function cargarTablets() {
             const fila = `
                 <tr>
                     <td>${tablet.id_articulo}</td>
-                    <td><strong>${tablet.modelo}</strong><br><small class="text-muted">${tablet.num_serie}</small></td>
+                    <td><strong>${tablet.modelo}</strong><br>
+                    <small class="text-muted">${tablet.num_serie}</small></td>
                     <td>${tablet.descripcion}</td>
+                    <td>1</td>
                     <td>
                         <span class="badge ${tablet.estado === 'Disponible' ? 'bg-success' : 'bg-primary'}">
                             ${tablet.estado}
                         </span>
                     </td>
+                    <td>${tablet.ubicacion || 'Sin asignar'}</td>
                 </tr>
             `;
             cuerpo.innerHTML += fila;
@@ -232,13 +237,12 @@ if (inputIngreso && listaIngreso) {
 
 
 
-
 // ==========================================
 // 3. BUSCADOR DE PRODUCTOS (MODAL ENTREGA)
 // ==========================================
 const inputEntregaProd = document.getElementById('buscar-producto-ent');
 const listaEntregaProd = document.getElementById('sugerencias-ent');
-
+/*
 if (inputEntregaProd && listaEntregaProd) {
     inputEntregaProd.addEventListener('input', async (e) => {
         const texto = e.target.value;
@@ -253,6 +257,50 @@ if (inputEntregaProd && listaEntregaProd) {
                     const item = document.createElement('a');
                     item.className = 'list-group-item list-group-item-action';
                     item.innerHTML = `<span>${p.descripcion}</span> <span class="badge bg-info">Stock: ${p.stock}</span>`;
+                 item.onclick = () => {
+    document.getElementById('id-articulo-ent').value = p.id_articulo;
+    document.getElementById('display-id-ent').value = p.id_articulo;
+    document.getElementById('cat-ent').value = p.categoria;
+    inputEntregaProd.value = p.descripcion;
+    document.getElementById('cant-ent').max = p.stock;
+    listaEntregaProd.style.display = 'none';
+
+    // Serie para Seguridad/Tablet
+    const panelSerieEnt = document.getElementById('panel-serie-entrega');
+    if (p.categoria === 'Seguridad' || p.categoria === 'Tablet') {
+        fetch(`/api/productos/${p.id_articulo}/detalle`)
+            .then(r => r.json())
+            .then(detalle => {
+                document.getElementById('serie-readonly-entrega').value = detalle.num_serie || 'Sin serie';
+                panelSerieEnt.classList.remove('d-none');
+                document.getElementById('cant-ent').value = 1;
+                document.getElementById('cant-ent').readOnly = true;
+            });
+    } else {
+        panelSerieEnt.classList.add('d-none');
+        document.getElementById('cant-ent').readOnly = false;
+    }
+};
+                    listaEntregaProd.appendChild(item);
+                });
+            }
+        } catch (f) { console.error("Error buscador entrega prod:", f); }
+    });
+}*/
+if (inputEntregaProd && listaEntregaProd) {
+    inputEntregaProd.addEventListener('input', async (e) => {
+        const texto = e.target.value;
+        if (texto.length < 2) { listaEntregaProd.style.display = 'none'; return; }
+        try {
+            const res = await fetch(`/api/productos/buscar?q=${texto}`);
+            const productos = await res.json();
+            listaEntregaProd.innerHTML = '';
+            if (productos.length > 0) {
+                listaEntregaProd.style.display = 'block';
+                productos.forEach(p => {
+                    const item = document.createElement('a');
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `<strong>${p.id_articulo}</strong> - ${p.descripcion} <span class="badge bg-info">Stock: ${p.stock}</span>`;
                     item.onclick = () => {
                         document.getElementById('id-articulo-ent').value = p.id_articulo;
                         document.getElementById('display-id-ent').value = p.id_articulo;
@@ -260,6 +308,26 @@ if (inputEntregaProd && listaEntregaProd) {
                         inputEntregaProd.value = p.descripcion;
                         document.getElementById('cant-ent').max = p.stock;
                         listaEntregaProd.style.display = 'none';
+
+                        // Mostrar panel serie si aplica
+                        const panelSerie = document.getElementById('panel-serie-entrega');
+                        const resultadoSerie = document.getElementById('resultado-serie');
+                        const btnConfirmar = document.getElementById('btn-confirmar-entrega');
+
+                        if (p.categoria === 'Seguridad' || p.categoria === 'Tablet') {
+                            panelSerie.classList.remove('d-none');
+                            document.getElementById('serie-verificar').value = '';
+                            resultadoSerie.classList.add('d-none');
+                            resultadoSerie.innerHTML = '';
+                            // Bloquear confirmar hasta verificar serie
+                            btnConfirmar.disabled = true;
+                            document.getElementById('cant-ent').value = 1;
+                            document.getElementById('cant-ent').readOnly = true;
+                        } else {
+                            panelSerie.classList.add('d-none');
+                            btnConfirmar.disabled = false;
+                            document.getElementById('cant-ent').readOnly = false;
+                        }
                     };
                     listaEntregaProd.appendChild(item);
                 });
@@ -267,6 +335,7 @@ if (inputEntregaProd && listaEntregaProd) {
         } catch (f) { console.error("Error buscador entrega prod:", f); }
     });
 }
+
 
 // ==========================================
 // 4. BUSCADOR DE COLABORADORES (MODAL ENTREGA) ONCLICK
@@ -277,6 +346,8 @@ const listaColab = document.getElementById('sugerencias-colab');
 if (inputColab && listaColab) {
     inputColab.addEventListener('input', async (e) => {
         const filtro = e.target.value;
+        // Ocultar nombre confirmado al escribir de nuevo
+        document.getElementById('nombre-colaborador-confirmado').classList.add('d-none');
         if (filtro.length < 2) { listaColab.style.display = 'none'; return; }
         try {
             const res = await fetch(`/api/colaboradores/buscar?q=${filtro}`);
@@ -287,42 +358,23 @@ if (inputColab && listaColab) {
                 datos.forEach(c => {
                     const item = document.createElement('a');
                     item.className = 'list-group-item list-group-item-action';
-                    item.innerHTML = `<strong>${c.rut}</strong> - ${c.nombre1} ${c.apellido1}`;
-                    /*item.onclick = () => {
+                    item.innerHTML = `<strong>${c.rut}</strong> — ${c.nombre1} ${c.apellido1} <small class="text-muted">${c.cargo || ''}</small>`;
+                    item.onclick = () => {
                         inputColab.value = c.rut;
                         listaColab.style.display = 'none';
-                    };*/
-                    item.onclick = () => {
-    document.getElementById('id-articulo-ent').value = p.id_articulo;
-    document.getElementById('display-id-ent').value = p.id_articulo;
-    document.getElementById('cat-ent').value = p.categoria;
-    inputEntregaProd.value = p.descripcion;
-    document.getElementById('cant-ent').max = p.stock;
-    listaEntregaProd.style.display = 'none';
-
-    // NUEVO: Mostrar serie si es Seguridad/Tablet
-    const panelSerieEnt = document.getElementById('panel-serie-entrega');
-    if (p.categoria === 'Seguridad' || p.categoria === 'Tablet') {
-        fetch(`/api/productos/${p.id_articulo}/detalle`)
-            .then(r => r.json())
-            .then(detalle => {
-                document.getElementById('serie-readonly-entrega').value = detalle.num_serie || 'Sin serie';
-                panelSerieEnt.classList.remove('d-none');
-                // Bloquear cantidad en 1
-                document.getElementById('cant-ent').value = 1;
-                document.getElementById('cant-ent').readOnly = true;
-            });
-    } else {
-        panelSerieEnt.classList.add('d-none');
-        document.getElementById('cant-ent').readOnly = false;
-    }
-};
+                        // Mostrar nombre confirmado
+                        document.getElementById('texto-nombre-colab').textContent = 
+                            `${c.nombre1} ${c.nombre2 || ''} ${c.apellido1} ${c.apellido2 || ''}`.trim();
+                        document.getElementById('nombre-colaborador-confirmado').classList.remove('d-none');
+                    };
                     listaColab.appendChild(item);
                 });
             }
         } catch (f) { console.error("Error buscador colab:", f); }
     });
 }
+
+
 
 // ==========================================
 // 5. REGISTRO FINAL DE ENTREGA
@@ -337,7 +389,7 @@ async function confirmarEntrega() {
     };
 
     if (!datos.id_articulo || !datos.rut_colaborador || !datos.cantidad) {
-        alert("Faltan datos obligatorios"); return;
+        alert("⚠️ Faltan datos obligatorios"); return;
     }
 
     try {
@@ -347,7 +399,7 @@ async function confirmarEntrega() {
             body: JSON.stringify(datos)
         });
         if (res.ok) {
-            alert("✅ Entrega registrada");
+            alert("✅ Entrega registrada exitosamente");
             location.reload();
         } else {
             const err = await res.json();
@@ -573,5 +625,47 @@ function actualizarPanelDinamico(categoria) {
     if (contenido !== '') {
         panel.innerHTML = contenido;
         panel.classList.remove('d-none'); // Hacemos visible el panel
+    }
+}
+
+// ==========================================
+// VERIFICACIÓN DE SERIE (SEGURIDAD/TABLET)
+// ==========================================
+async function verificarSerie() {
+    const idArticulo = document.getElementById('id-articulo-ent').value;
+    const serieIngresada = document.getElementById('serie-verificar').value.trim();
+    const resultado = document.getElementById('resultado-serie');
+    const btnConfirmar = document.getElementById('btn-confirmar-entrega');
+
+    if (!serieIngresada) {
+        resultado.innerHTML = `<div class="alert alert-warning">⚠️ Ingrese un número de serie.</div>`;
+        resultado.classList.remove('d-none');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/productos/${idArticulo}/detalle`);
+        const detalle = await res.json();
+
+        if (detalle.num_serie && detalle.num_serie.trim().toLowerCase() === serieIngresada.toLowerCase()) {
+            resultado.innerHTML = `
+                <div class="alert alert-success">
+                    ✅ <strong>Serie verificada correctamente</strong><br>
+                    Producto: ${detalle.descripcion}<br>
+                    Modelo: ${detalle.modelo || 'N/A'} — Serie: <strong>${detalle.num_serie}</strong>
+                </div>`;
+            btnConfirmar.disabled = false; // Habilitar botón
+        } else {
+            resultado.innerHTML = `
+                <div class="alert alert-danger">
+                    ❌ <strong>Serie no coincide</strong><br>
+                    El número <strong>${serieIngresada}</strong> no corresponde a este producto en bodega.
+                </div>`;
+            btnConfirmar.disabled = true;
+        }
+        resultado.classList.remove('d-none');
+    } catch (error) {
+        resultado.innerHTML = `<div class="alert alert-danger">❌ Error al verificar: ${error.message}</div>`;
+        resultado.classList.remove('d-none');
     }
 }
