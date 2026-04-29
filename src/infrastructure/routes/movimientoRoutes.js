@@ -83,4 +83,45 @@ router.post('/entrega', async (req, res) => {
     }
 });
 
+// ========================
+// BUENA GENTE CLAUDE
+//=========================
+// --- RUTA 1: INGRESO GENERAL ---
+router.post('/', async (req, res) => {
+    // ... (tu código existente, no tocar)
+});
+
+// --- RUTA 2: INGRESO (llamado desde el modal "+ Nuevo Ingreso") ---
+router.post('/ingreso', async (req, res) => {
+    const { id_articulo, tipo_movimiento, cantidad, ubicacion, serie, modelo, aerolinea } = req.body;
+
+    const query = `
+        INSERT INTO movimiento (id_articulo, tipo_movimiento, cantidad, ubicacion, serie, modelo, aerolinea, fecha_movimiento)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+    `;
+    try {
+        const [result] = await pool.execute(query, [
+            id_articulo,
+            tipo_movimiento || 'INGRESO',
+            cantidad,
+            ubicacion,
+            serie || null,
+            modelo || null,
+            aerolinea || null
+        ]);
+        res.status(201).json({ message: "Guardado correctamente", id: result.insertId });
+    } catch (error) {
+        console.error("Error en DB:", error);
+        res.status(500).json({ error: "Error al insertar: " + error.message });
+    }
+});
+
+// --- RUTA 3: ENTREGA A COLABORADOR ---
+router.post('/entrega', async (req, res) => {
+    // ... (tu código existente, no tocar)
+});
+
 module.exports = router;
+
+
+
