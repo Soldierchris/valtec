@@ -6,6 +6,21 @@ const ProductoRepository = require('../../infrastructure/database/ProductoReposi
 // POST /api/productos
 router.post('/', (req, res) => productoController.crear(req, res));
 
+// GET /api/productos/:id/detalle
+router.get('/:id/detalle', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT p.id_articulo, p.descripcion, p.categoria,
+                   ds.num_serie, ds.modelo
+            FROM producto p
+            LEFT JOIN detalle_serializado ds ON p.id_articulo = ds.id_articulo
+            WHERE p.id_articulo = ?
+        `, [req.params.id]);
+        res.json(rows[0] || {});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // GET /api/productos/buscar?q=...
 router.get('/buscar', async (req, res) => {
     try {
@@ -17,5 +32,7 @@ router.get('/buscar', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
 
 module.exports = router;

@@ -203,35 +203,7 @@ async function guardarColaborador() {
 // =================================================================================================
 const inputIngreso = document.getElementById('buscar-producto');
 const listaIngreso = document.getElementById('sugerencias');
-/** 
-if (inputIngreso && listaIngreso) {
-    inputIngreso.addEventListener('input', async (e) => {
-        const texto = e.target.value;
-        if (texto.length < 2) { listaIngreso.style.display = 'none'; return; }
-        try {
-            const res = await fetch(`/api/productos/buscar?q=${texto}`);
-            const productos = await res.json();
-            listaIngreso.innerHTML = '';
-            if (productos.length > 0) {
-                listaIngreso.style.display = 'block';
-                productos.forEach(p => {
-                    const item = document.createElement('a');
-                    item.className = 'list-group-item list-group-item-action';
-                    item.innerHTML = `<strong>ID: ${p.id_articulo}</strong> - ${p.descripcion}`;
-                    item.onclick = () => {
-                        document.getElementById('id_articulo').value = p.id_articulo;
-                        document.getElementById('display-id').value = p.id_articulo;
-                        document.getElementById('categoria-detectada').value = p.categoria;
-                        inputIngreso.value = p.descripcion;
-                        listaIngreso.style.display = 'none';
-                    };
-                    listaIngreso.appendChild(item);
-                });
-            }
-        } catch (f) { console.error("Error buscador ingreso:", f); }
-    });
-}
-*/
+
 // CORRECCIÓN EN SECCIÓN 2: BUSCADOR DE PRODUCTOS (MODAL INGRESO)
 if (inputIngreso && listaIngreso) {
     inputIngreso.addEventListener('input', async (e) => {
@@ -297,7 +269,7 @@ if (inputEntregaProd && listaEntregaProd) {
 }
 
 // ==========================================
-// 4. BUSCADOR DE COLABORADORES (MODAL ENTREGA)
+// 4. BUSCADOR DE COLABORADORES (MODAL ENTREGA) ONCLICK
 // ==========================================
 const inputColab = document.getElementById('rut-colaborador');
 const listaColab = document.getElementById('sugerencias-colab');
@@ -316,10 +288,35 @@ if (inputColab && listaColab) {
                     const item = document.createElement('a');
                     item.className = 'list-group-item list-group-item-action';
                     item.innerHTML = `<strong>${c.rut}</strong> - ${c.nombre1} ${c.apellido1}`;
-                    item.onclick = () => {
+                    /*item.onclick = () => {
                         inputColab.value = c.rut;
                         listaColab.style.display = 'none';
-                    };
+                    };*/
+                    item.onclick = () => {
+    document.getElementById('id-articulo-ent').value = p.id_articulo;
+    document.getElementById('display-id-ent').value = p.id_articulo;
+    document.getElementById('cat-ent').value = p.categoria;
+    inputEntregaProd.value = p.descripcion;
+    document.getElementById('cant-ent').max = p.stock;
+    listaEntregaProd.style.display = 'none';
+
+    // NUEVO: Mostrar serie si es Seguridad/Tablet
+    const panelSerieEnt = document.getElementById('panel-serie-entrega');
+    if (p.categoria === 'Seguridad' || p.categoria === 'Tablet') {
+        fetch(`/api/productos/${p.id_articulo}/detalle`)
+            .then(r => r.json())
+            .then(detalle => {
+                document.getElementById('serie-readonly-entrega').value = detalle.num_serie || 'Sin serie';
+                panelSerieEnt.classList.remove('d-none');
+                // Bloquear cantidad en 1
+                document.getElementById('cant-ent').value = 1;
+                document.getElementById('cant-ent').readOnly = true;
+            });
+    } else {
+        panelSerieEnt.classList.add('d-none');
+        document.getElementById('cant-ent').readOnly = false;
+    }
+};
                     listaColab.appendChild(item);
                 });
             }
@@ -443,6 +440,7 @@ async function confirmarIngreso() {
 //===============================================================
 
 // Esta función se ejecuta cuando haces clic en un resultado de la lista de sugerencias [cite: 12]
+/*
 function seleccionarProducto(producto) {
     // Llenado de campos base [cite: 11, 14, 18]
     document.getElementById('buscar-producto').value = producto.descripcion;
@@ -457,6 +455,36 @@ function seleccionarProducto(producto) {
     mostrarCamposPorCategoria(producto.categoria);
     
     document.getElementById('sugerencias').style.display = 'none';
+}*/
+function seleccionarProducto(producto) {
+    document.getElementById('buscar-producto').value = producto.descripcion;
+    document.getElementById('id_articulo').value = producto.id_articulo;
+    document.getElementById('display-id').value = producto.id_articulo;
+    document.getElementById('categoria-detectada').value = producto.categoria;
+    actualizarPanelDinamico(producto.categoria);
+    mostrarCamposPorCategoria(producto.categoria);
+    document.getElementById('sugerencias').style.display = 'none';
+
+    // NUEVO: Si es serializado, traer serie y bloquear cantidad en 1
+    const panelSerie = document.getElementById('panel-serie-ingreso');
+    const campoCantidad = document.getElementById('cantidad');
+
+    if (producto.categoria === 'Seguridad' || producto.categoria === 'Tablet') {
+        fetch(`/api/productos/${producto.id_articulo}/detalle`)
+            .then(r => r.json())
+            .then(detalle => {
+                document.getElementById('serie-readonly-ingreso').value = detalle.num_serie || 'Sin serie registrada';
+                panelSerie.classList.remove('d-none');
+                campoCantidad.value = 1;
+                campoCantidad.readOnly = true;
+                campoCantidad.classList.add('bg-light');
+            });
+    } else {
+        // Si no es serializado, ocultar panel serie y desbloquear cantidad
+        panelSerie.classList.add('d-none');
+        campoCantidad.readOnly = false;
+        campoCantidad.classList.remove('bg-light');
+    }
 }
 
 function mostrarCamposPorCategoria(categoria) {
@@ -492,59 +520,7 @@ function mostrarCamposPorCategoria(categoria) {
         panel.classList.add('d-none'); // Ocultar si no aplica
     }
 }
-/** 
-function actualizarPanelDinamico(categoria) {
-    const panel = document.getElementById('panel-dinamico');
-    panel.innerHTML = ''; // Limpiamos el panel
-    panel.classList.add('d-none'); // Lo ocultamos por defecto
 
-    if (!categoria) return;
-
-    let contenido = '';
-
-    // Lógica por categoría según lo solicitado
-    if (categoria === 'Formulario') {
-        contenido = `
-            <div class="row">
-                <div class="col-md-12">
-                    <label class="form-label fw-bold">Aerolínea</label>
-                    <select id="aerolinea" class="form-select" required>
-                        <option value="">Seleccione Aerolínea...</option>
-                        <option value="LATAM">LATAM</option>
-                        <option value="SKY">SKY</option>
-                        <option value="Otro">OTRO</option>
-                    </select>
-                </div>
-            </div>`;
-    } 
-    else if (categoria === 'Seguridad') {
-        contenido = `
-            <div class="row">
-                <div class="col-md-12">
-                    <label class="form-label fw-bold">Número de Serie (EPI)</label>
-                    <input type="text" id="serie-seguridad" class="form-control" placeholder="Tipee el número de serie..." required>
-                </div>
-            </div>`;
-    } 
-    else if (categoria === 'Tablet') {
-        contenido = `
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Modelo</label>
-                    <input type="text" id="modelo-tablet" class="form-control" placeholder="Ej: Active 3" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Número de Serie</label>
-                    <input type="text" id="serie-tablet" class="form-control" placeholder="S/N del dispositivo" required>
-                </div>
-            </div>`;
-    }
-
-    if (contenido !== '') {
-        panel.innerHTML = contenido;
-        panel.classList.remove('d-none'); // Mostramos el panel si hay campos nuevos
-    }
-}*/
 
 function actualizarPanelDinamico(categoria) {
     const panel = document.getElementById('panel-dinamico');
