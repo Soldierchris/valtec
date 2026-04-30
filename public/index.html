@@ -61,12 +61,12 @@
                     LATAM</button>
                 <button class="btn btn-outline-light w-100 mb-2" onclick="cargarFormularios('SKY')">Reporte SKY</button>
                 <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarTablets()">Listado Tablets</button>
-                <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarBodegaSeguridad()">Bodega Seguridad</button>
+                <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarBodegaSeguridad()">Inventario Bodega Seguridad</button>
                 <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalColaborador">+Nuevo Colaborador</button>
                 <button class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalProducto">+Nuevo Producto</button>
                 <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalIngreso">+ Nuevo Ingreso</button>
-                <button type="button" class="btn btn-primary" onclick="confirmarIngreso()">Registrar Movimiento</button>
-                <button class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalEntrega">Registrar Movimiento (Entrega)</button>
+                <!-- ><button type="button" class="btn btn-primary" onclick="confirmarIngreso()">Registrar Movimiento</button>-->
+                <button class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalEntrega">Registrar (Entrega)</button>
             </div>
 
             <main class="col-md-10 p-4">
@@ -289,20 +289,9 @@
                         <label class="form-label">Categoría Detectada</label>
                         <input type="text" id="categoria-detectada" class="form-control bg-light" readonly>
                     </div>
-
-                    <div id="panel-dinamico" class="col-12 mt-3 p-3 rounded border d-none">
-                        <!-- NUEVO: N° Serie auto-completado para Seguridad/Tablet -->
-<div id="panel-serie-ingreso" class="col-12 d-none">
-    <div class="alert alert-info d-flex align-items-center p-2 mt-2">
-        <span class="me-2">🔖</span>
-        <div>
-            <strong>N° de Serie registrado:</strong>
-            <input type="text" id="serie-readonly-ingreso" class="form-control form-control-sm mt-1 bg-white fw-bold" readonly>
-            <small class="text-muted">Este número fue registrado al crear el producto. Cantidad fija: 1.</small>
-        </div>
-    </div>
+                    
+                   <div id="panel-dinamico" class="col-12 mt-3 p-3 rounded border d-none">
 </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">

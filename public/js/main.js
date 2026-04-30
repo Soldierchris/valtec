@@ -435,35 +435,54 @@ document.addEventListener('click', (e) => {
 // 6. REGISTRO DE NUEVO INGRESO (PRODUCTOS) NO TOCAR AL MOMENTO FUNCIONANDO, TOCAR SOLO PARA MEJORAS
 // =================================================================================================
 async function confirmarIngreso() {
-    // 1. Recolectamos los datos base 
     const categoria = document.getElementById('categoria-detectada').value;
-    
+    const idArticulo = document.getElementById('id_articulo').value;
+
     const datos = {
-        id_articulo: document.getElementById('id_articulo').value,
+        id_articulo: idArticulo,
         cantidad: document.getElementById('cantidad').value,
         ubicacion: document.getElementById('ubicacion').value,
-        id_usuario: 1, // Usuario por defecto 
-        // Campos dinámicos inicializados en null
+        id_usuario: 1,
         modelo: null,
         serie: null,
         aerolinea: null,
         tipo_documento: null
     };
 
-    // 2. Agregamos los datos según la categoría detectada
     if (categoria === 'Tablet') {
         datos.modelo = document.getElementById('modelo-tablet')?.value || null;
         datos.serie = document.getElementById('serie-tablet')?.value || null;
     } else if (categoria === 'Seguridad') {
+        datos.modelo = document.getElementById('modelo-seguridad')?.value || null;
         datos.serie = document.getElementById('serie-seguridad')?.value || null;
     } else if (categoria === 'Formulario') {
         datos.aerolinea = document.getElementById('aerolinea')?.value || null;
     }
 
-    // 3. Validación básica
     if (!datos.id_articulo || !datos.cantidad || !datos.ubicacion) {
         alert("⚠️ Por favor, complete todos los campos del ingreso.");
         return;
+    }
+
+    // VALIDACIÓN DE SERIE para Seguridad/Tablet
+    if (categoria === 'Seguridad' || categoria === 'Tablet') {
+        if (!datos.serie) {
+            alert("⚠️ Debe ingresar el N° de Serie.");
+            return;
+        }
+        try {
+            const resDetalle = await fetch(`/api/productos/${idArticulo}/detalle`);
+            const detalle = await resDetalle.json();
+
+            if (!detalle.num_serie || 
+                detalle.num_serie.trim().toLowerCase() !== datos.serie.trim().toLowerCase()) {
+                alert(`❌ Serie incorrecta.\nLa serie "${datos.serie}" no corresponde a este producto en bodega.\nVerifique el número de serie del ítem físico.`);
+                return; // ← NO guarda si la serie no coincide
+            }
+        } catch (e) {
+            alert("❌ Error al verificar la serie. Intente nuevamente.");
+            return;
+        }
     }
 
     try {
@@ -475,7 +494,7 @@ async function confirmarIngreso() {
 
         if (res.ok) {
             alert("✅ Ingreso registrado correctamente.");
-            location.reload(); 
+            location.reload();
         } else {
             const errorData = await res.json();
             alert("❌ Error al registrar: " + (errorData.error || "Error desconocido"));
@@ -486,58 +505,40 @@ async function confirmarIngreso() {
     }
 }
 
-//======================================================
-// Esta función debe ejecutarse CUANDO EL USUARIO HACE CLIC en un producto de la lista de sugerencias
-// INGRESO DE PRODUCTOS A BODEGA
-//===============================================================
 
-// Esta función se ejecuta cuando haces clic en un resultado de la lista de sugerencias [cite: 12]
-/*
-function seleccionarProducto(producto) {
-    // Llenado de campos base [cite: 11, 14, 18]
-    document.getElementById('buscar-producto').value = producto.descripcion;
-    document.getElementById('id_articulo').value = producto.id_articulo;
-    document.getElementById('display-id').value = producto.id_articulo;
-    //document.getElementById('categoria-detectada').value = producto.categoria.value = p.categoria;
-    document.getElementById('categoria-detectada').value = producto.categoria;
-    //actualizarPanelDinamico(p.categoria);
-    actualizarPanelDinamico(producto.categoria);
-
-    // ACTIVACIÓN AUTOMÁTICA: Llamamos a la función que dibuja los campos extras 
-    mostrarCamposPorCategoria(producto.categoria);
-    
-    document.getElementById('sugerencias').style.display = 'none';
-}*/
 function seleccionarProducto(producto) {
     document.getElementById('buscar-producto').value = producto.descripcion;
     document.getElementById('id_articulo').value = producto.id_articulo;
     document.getElementById('display-id').value = producto.id_articulo;
     document.getElementById('categoria-detectada').value = producto.categoria;
     actualizarPanelDinamico(producto.categoria);
-    mostrarCamposPorCategoria(producto.categoria);
+    //mostrarCamposPorCategoria(producto.categoria);
     document.getElementById('sugerencias').style.display = 'none';
 
-    // NUEVO: Si es serializado, traer serie y bloquear cantidad en 1
-    const panelSerie = document.getElementById('panel-serie-ingreso');
     const campoCantidad = document.getElementById('cantidad');
 
     if (producto.categoria === 'Seguridad' || producto.categoria === 'Tablet') {
         fetch(`/api/productos/${producto.id_articulo}/detalle`)
             .then(r => r.json())
             .then(detalle => {
-                document.getElementById('serie-readonly-ingreso').value = detalle.num_serie || 'Sin serie registrada';
-                panelSerie.classList.remove('d-none');
+                // Auto-llenar modelo (readonly) según categoría
+                const campoModelo = producto.categoria === 'Tablet'
+                    ? document.getElementById('modelo-tablet')
+                    : document.getElementById('modelo-seguridad');
+                if (campoModelo && detalle.modelo) {
+                    campoModelo.value = detalle.modelo;
+                }
+                // Bloquear cantidad en 1
                 campoCantidad.value = 1;
                 campoCantidad.readOnly = true;
                 campoCantidad.classList.add('bg-light');
             });
     } else {
-        // Si no es serializado, ocultar panel serie y desbloquear cantidad
-        panelSerie.classList.add('d-none');
         campoCantidad.readOnly = false;
         campoCantidad.classList.remove('bg-light');
     }
 }
+
 
 function mostrarCamposPorCategoria(categoria) {
     const panel = document.getElementById('panel-dinamico');
@@ -599,28 +600,36 @@ function actualizarPanelDinamico(categoria) {
                 </div>
             </div>`;
     } 
-    else if (categoria === 'Seguridad') {
-        contenido = `
-            <div class="row">
-                <div class="col-md-12">
-                    <label class="form-label fw-bold">Número de Serie (EPI)</label>
-                    <input type="text" id="serie-seguridad" class="form-control" placeholder="Tipee el número de serie..." required>
-                </div>
-            </div>`;
-    } 
-    else if (categoria === 'Tablet') {
-        contenido = `
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Modelo</label>
-                    <input type="text" id="modelo-tablet" class="form-control" placeholder="Ej: Active 3" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Número de Serie</label>
-                    <input type="text" id="serie-tablet" class="form-control" placeholder="S/N del dispositivo" required>
-                </div>
-            </div>`;
-    }
+else if (categoria === 'Seguridad') {
+    contenido = `
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Modelo</label>
+                <input type="text" id="modelo-seguridad" class="form-control bg-light text-muted" 
+                       readonly placeholder="Se carga automáticamente...">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">🔖 N° de Serie (EPI)</label>
+                <input type="text" id="serie-seguridad" class="form-control" 
+                       placeholder="Tipee el número de serie..." required>
+            </div>
+        </div>`;
+} 
+else if (categoria === 'Tablet') {
+    contenido = `
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Modelo</label>
+                <input type="text" id="modelo-tablet" class="form-control bg-light text-muted" 
+                       readonly placeholder="Se carga automáticamente...">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">🔖 Número de Serie</label>
+                <input type="text" id="serie-tablet" class="form-control" 
+                       placeholder="S/N del dispositivo" required>
+            </div>
+        </div>`;
+}
 
     if (contenido !== '') {
         panel.innerHTML = contenido;
