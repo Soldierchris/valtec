@@ -51,14 +51,15 @@ router.post('/ingreso', async (req, res) => {
 });
 
 // --- RUTA 3: ENTREGA A COLABORADOR ---
+// --- RUTA 3: ENTREGA A COLABORADOR ---
 router.post('/entrega', async (req, res) => {
-    const { id_articulo, cantidad, ubicacion, rut_colaborador, id_usuario_bodega } = req.body;
+    const { id_articulo, cantidad, ubicacion, rut_colaborador, id_usuario_bodega, serie, modelo } = req.body;
     const connection = await pool.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        // 1. VALIDACIÓN DE STOCK (calculado desde movimientos)
+        // 1. VALIDACIÓN DE STOCK
         const [rows] = await connection.execute(
             `SELECT 
                 p.id_articulo,
@@ -76,11 +77,12 @@ router.post('/entrega', async (req, res) => {
         if (rows.length === 0) throw new Error("El producto no existe.");
         if (rows[0].stock_actual < cantidad) throw new Error(`Stock insuficiente. Disponible: ${rows[0].stock_actual}`);
 
-        // 2. REGISTRO DEL MOVIMIENTO
+        // 2. REGISTRO DEL MOVIMIENTO — ahora incluye serie y modelo
         await connection.execute(
-            `INSERT INTO movimiento (id_articulo, tipo_movimiento, cantidad, ubicacion, rut_colaborador, id_usuario, fecha_movimiento)
-             VALUES (?, 'Entrega', ?, ?, ?, ?, NOW())`,
-            [id_articulo, cantidad, ubicacion, rut_colaborador, id_usuario_bodega || 1]
+            `INSERT INTO movimiento 
+                (id_articulo, tipo_movimiento, cantidad, ubicacion, rut_colaborador, id_usuario, serie, modelo, fecha_movimiento)
+             VALUES (?, 'Entrega', ?, ?, ?, ?, ?, ?, NOW())`,
+            [id_articulo, cantidad, ubicacion, rut_colaborador, id_usuario_bodega || 1, serie || null, modelo || null]
         );
 
         await connection.commit();
@@ -129,8 +131,8 @@ router.get('/bodega-seguridad', async (req, res) => {
                 AS stock_disponible
             FROM producto p
             LEFT JOIN detalle_serializado ds ON p.id_articulo = ds.id_articulo
-            LEFT JOIN movimiento m ON p.id_articulo = m.id_articulo
-            WHERE p.categoria = 'Seguridad'
+            INNER JOIN movimiento m ON p.id_articulo = m.id_articulo
+            WHERE m.ubicacion = 'Bodega Seguridad'
             GROUP BY p.id_articulo, p.descripcion, ds.num_serie, ds.modelo
             ORDER BY p.id_articulo
         `);
@@ -166,6 +168,34 @@ router.get('/trazabilidad/:serie', async (req, res) => {
         res.json(rows);
     } catch (error) {
         console.error("Error trazabilidad:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+// --- RUTA: INVENTARIO BODEGA GRANDE ---
+router.get('/bodega-grande', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                p.id_articulo,
+                p.descripcion,
+                p.categoria,
+                ds.num_serie,
+                ds.modelo,
+                COALESCE(SUM(CASE WHEN m.tipo_movimiento = 'Ingreso'    THEN m.cantidad ELSE 0 END), 0) -
+                COALESCE(SUM(CASE WHEN m.tipo_movimiento = 'Entrega'    THEN m.cantidad ELSE 0 END), 0) +
+                COALESCE(SUM(CASE WHEN m.tipo_movimiento = 'Devolución' THEN m.cantidad ELSE 0 END), 0)
+                AS stock_disponible
+            FROM producto p
+            LEFT JOIN detalle_serializado ds ON p.id_articulo = ds.id_articulo
+            INNER JOIN movimiento m ON p.id_articulo = m.id_articulo
+            WHERE m.ubicacion = 'Bodega Grande'
+            GROUP BY p.id_articulo, p.descripcion, p.categoria, ds.num_serie, ds.modelo
+            HAVING stock_disponible > 0
+            ORDER BY p.categoria, p.id_articulo
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error("Error bodega grande:", error);
         res.status(500).json({ error: error.message });
     }
 });

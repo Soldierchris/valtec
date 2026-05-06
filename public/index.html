@@ -12,10 +12,12 @@
         }
 
         .sidebar {
-            height: 100vh;
-            background: #212529;
-            color: white;
-            padding: 20px;
+             min-height: 100vh;
+    height: auto;
+    background: #212529;
+    color: white;
+    padding: 20px;
+    overflow-y: auto;
         }
 
         .card {
@@ -71,6 +73,7 @@
                 <button class="btn btn-outline-light w-100 mb-2" onclick="cargarFormularios('SKY')">Reporte SKY</button>
                 <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarTablets()">Listado Tablets</button>
                 <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarBodegaSeguridad()">Inventario Bodega Seguridad</button>
+                <button class="btn w-100 mb-2" style="background-color:#1a6b3a; color:white;" onclick="cargarBodegaGrande()">📦 Inventario Bodega Grande</button>
                 <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalColaborador">+Nuevo Colaborador</button>
                 <button class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalProducto">+Nuevo Producto</button>
                 <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalIngreso">+ Nuevo Ingreso</button>

@@ -1,8 +1,8 @@
-¡Ya tengo el problema identificado! No necesito más archivos.
-En movimientoRoutes.js la ruta POST /entrega consulta 
-una tabla articulos que no existe en tu BD. 
-La tabla correcta es producto, pero además esa 
-tabla no tiene columna stock —
- el stock se calcula sumando los movimientos.
-Reemplaza solo el bloque de validación de stock en la
- ruta POST /entrega:
+.sidebar {
+    min-height: 100vh;
+    height: auto;
+    background: #212529;
+    color: white;
+    padding: 20px;
+    overflow-y: auto;
+}

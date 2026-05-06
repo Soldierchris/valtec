@@ -217,6 +217,63 @@ async function cargarBodegaSeguridad() {
         cuerpo.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar inventario</td></tr>';
     }
 }
+// ==========================================
+// INVENTARIO BODEGA GRANDE
+// ==========================================
+async function cargarBodegaGrande() {
+    const titulo = document.getElementById('titulo-reporte');
+    const cuerpo = document.getElementById('tabla-cuerpo');
+    const cabecera = document.querySelector('thead');
+
+    titulo.innerText = "Cargando Inventario Bodega Grande...";
+
+    cabecera.innerHTML = `
+        <tr>
+            <th>ID</th>
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th>Modelo</th>
+            <th>N° de Serie</th>
+            <th>Stock Disponible</th>
+        </tr>
+    `;
+
+    try {
+        const respuesta = await fetch('/api/movimientos/bodega-grande');
+        const datos = await respuesta.json();
+
+        cuerpo.innerHTML = '';
+
+        if (datos.length === 0) {
+            cuerpo.innerHTML = '<tr><td colspan="6" class="text-center">No hay productos en Bodega Grande</td></tr>';
+            titulo.innerText = "Inventario Bodega Grande";
+            return;
+        }
+
+        datos.forEach(item => {
+            cuerpo.innerHTML += `
+                <tr>
+                    <td>${item.id_articulo}</td>
+                    <td>${item.descripcion}</td>
+                    <td><span class="badge bg-secondary">${item.categoria}</span></td>
+                    <td>${item.modelo || 'N/A'}</td>
+                    <td><strong>${item.num_serie || '—'}</strong></td>
+                    <td>
+                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">
+                            ${item.stock_disponible}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        titulo.innerText = "Inventario Bodega Grande";
+
+    } catch (error) {
+        console.error("Error:", error);
+        cuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar inventario</td></tr>';
+    }
+}
 
 // ==========================================
 // TRAZABILIDAD — VISTA COMPLETA EN PÁGINA
@@ -738,16 +795,37 @@ if (inputColab && listaColab) {
 // 5. REGISTRO FINAL DE ENTREGA
 // ==========================================
 async function confirmarEntrega() {
+    const categoria = document.getElementById('cat-ent').value;
+    const idArticulo = document.getElementById('id-articulo-ent').value;
+
     const datos = {
-        id_articulo: document.getElementById('id-articulo-ent').value,
+        id_articulo: idArticulo,
         rut_colaborador: document.getElementById('rut-colaborador').value,
         cantidad: document.getElementById('cant-ent').value,
         ubicacion: document.getElementById('bodega-origen').value,
-        id_usuario: 1
+        id_usuario: 1,
+        serie: null,
+        modelo: null
     };
 
     if (!datos.id_articulo || !datos.rut_colaborador || !datos.cantidad) {
         alert("⚠️ Faltan datos obligatorios"); return;
+    }
+
+    // Si es Seguridad/Tablet → traer serie y modelo desde detalle
+    if (categoria === 'Seguridad' || categoria === 'Tablet') {
+        const serieVerificada = document.getElementById('serie-verificar')?.value.trim();
+        if (!serieVerificada) {
+            alert("⚠️ Debe verificar el N° de Serie antes de confirmar."); return;
+        }
+        try {
+            const resDetalle = await fetch(`/api/productos/${idArticulo}/detalle`);
+            const detalle = await resDetalle.json();
+            datos.serie = detalle.num_serie || null;
+            datos.modelo = detalle.modelo || null;
+        } catch (e) {
+            alert("❌ Error al obtener detalle del producto."); return;
+        }
     }
 
     try {
