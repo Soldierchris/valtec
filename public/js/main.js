@@ -1284,6 +1284,82 @@ async function confirmarDevolucion() {
     } catch (e) { console.error("Error confirmando devolución:", e); }
 }
 
+
+// ===== CUSTODIO POR RUT =====
+let rutCustodioSeleccionado = null;
+
+document.getElementById('rut-custodia')?.addEventListener('input', async function () {
+    const q = this.value.trim();
+    const lista = document.getElementById('sugerencias-colab-custodia');
+    if (q.length < 2) { lista.style.display = 'none'; return; }
+
+    const res = await fetch(`/api/colaboradores/buscar?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    lista.innerHTML = '';
+    if (!data.length) { lista.style.display = 'none'; return; }
+
+    data.forEach(c => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item list-group-item-action';
+        li.textContent = `${c.rut} — ${c.nombre1} ${c.apellido1}`;
+        li.onclick = () => seleccionarCustodio(c);
+        lista.appendChild(li);
+    });
+    lista.style.display = 'block';
+});
+
+function seleccionarCustodio(c) {
+    rutCustodioSeleccionado = c.rut;
+    document.getElementById('rut-custodia').value = `${c.rut} — ${c.nombre1} ${c.apellido1}`;
+    document.getElementById('sugerencias-colab-custodia').style.display = 'none';
+    document.getElementById('custodio-nombre').textContent = `${c.nombre1} ${c.apellido1} · ${c.cargo}`;
+    document.getElementById('custodio-rut-badge').textContent = c.rut;
+    document.getElementById('custodio-confirmado').classList.remove('d-none');
+    cargarCustodia(c.rut);
+}
+
+async function cargarCustodia(rut) {
+    const container = document.getElementById('tabla-custodia-container');
+    const sinRes = document.getElementById('custodia-sin-resultados');
+    const tbody = document.getElementById('tbody-custodia');
+
+    container.classList.add('d-none');
+    sinRes.classList.add('d-none');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Cargando...</td></tr>';
+    container.classList.remove('d-none');
+
+    const res = await fetch(`/api/movimientos/custodia/${encodeURIComponent(rut)}`);
+    const data = await res.json();
+
+    if (!data.length) {
+        container.classList.add('d-none');
+        sinRes.classList.remove('d-none');
+        return;
+    }
+
+    document.getElementById('badge-total-custodia').textContent = `${data.length} activo(s)`;
+    tbody.innerHTML = data.map(item => {
+        const diasClass = item.dias_en_custodia > 30 ? 'text-danger fw-bold' : item.dias_en_custodia > 7 ? 'text-warning' : '';
+        return `<tr>
+            <td>${item.descripcion}</td>
+            <td><span class="badge bg-secondary">${item.categoria}</span></td>
+            <td>${item.serie ? `<code>${item.serie}</code>` : '—'}${item.modelo ? ` <small class="text-muted">${item.modelo}</small>` : ''}</td>
+            <td>${new Date(item.fecha_movimiento).toLocaleDateString('es-CL')}</td>
+            <td class="${diasClass}">${item.dias_en_custodia} días</td>
+        </tr>`;
+    }).join('');
+}
+
+// Limpiar modal al cerrar
+document.getElementById('modalCustodia')?.addEventListener('hidden.bs.modal', () => {
+    document.getElementById('rut-custodia').value = '';
+    document.getElementById('sugerencias-colab-custodia').style.display = 'none';
+    document.getElementById('custodio-confirmado').classList.add('d-none');
+    document.getElementById('tabla-custodia-container').classList.add('d-none');
+    document.getElementById('custodia-sin-resultados').classList.add('d-none');
+    rutCustodioSeleccionado = null;
+});
+
 // ==========================================
 // TRAZABILIDAD DE ACTIVO
 // ==========================================

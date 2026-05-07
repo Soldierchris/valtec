@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VALTEC — Acceso al Sistema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --dark: #111316;
+    --panel: #1a1d22;
+    --border: #2e323a;
+    --accent: #e8a200;
+    --accent-dim: rgba(232, 162, 0, 0.12);
+    --accent-glow: rgba(232, 162, 0, 0.08);
+    --text-primary: #f0ede8;
+    --text-secondary: #888d96;
+    --text-muted: #4f545d;
+    --danger: #e05050;
+    --success: #3bb87a;
+    --input-bg: #0e1014;
+    --input-border: #2a2e36;
+    --input-focus: #e8a200;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--dark);
+    font-family: 'Barlow', sans-serif;
+    color: var(--text-primary);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(232, 162, 0, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232, 162, 0, 0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(232,162,0,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* LEFT PANEL */
+  .branding {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 56px 60px;
+    border-right: 1px solid var(--border);
+    background: linear-gradient(160deg, #141720 0%, #0e1014 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .branding::before {
+    content: 'VALTEC';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 200px;
+    font-weight: 700;
+    letter-spacing: -8px;
+    color: rgba(255,255,255,0.018);
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .brand-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(232,162,0,0.25);
+    padding: 6px 14px;
+    border-radius: 4px;
+    margin-bottom: 28px;
+    width: fit-content;
+  }
+
+  .brand-tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .brand-tag span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .brand-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 58px;
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+
+  .brand-title em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .brand-desc {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 320px;
+    margin-bottom: 48px;
+  }
+
+  .brand-stats {
+    display: flex;
+    gap: 32px;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+  }
+
+  /* RIGHT PANEL */
+  .form-panel {
+    width: 440px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px 48px;
+    background: var(--panel);
+  }
+
+  .form-header {
+    margin-bottom: 40px;
+  }
+
+  .form-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .form-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .form-subtitle {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text-secondary);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .form-label svg { opacity: 0.5; }
+
+  .input-wrapper { position: relative; }
+
+  .form-input {
+    width: 100%;
+    height: 46px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    padding: 0 44px 0 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    caret-color: var(--accent);
+  }
+
+  .form-input::placeholder {
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .form-input:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .input-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .toggle-pass {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+
+  .toggle-pass:hover { color: var(--text-secondary); }
+
+  .alert {
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 20px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert-error {
+    background: rgba(224, 80, 80, 0.1);
+    border: 1px solid rgba(224, 80, 80, 0.3);
+    color: #f08080;
+  }
+
+  .btn-login {
+    width: 100%;
+    height: 50px;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #111316;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-login:hover {
+    background: #f0aa00;
+    box-shadow: 0 4px 20px rgba(232,162,0,0.25);
+    transform: translateY(-1px);
+  }
+
+  .btn-login:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  .btn-login.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(17,19,22,0.3);
+    border-top-color: #111316;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .form-footer {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-role {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .badge-admin {
+    background: rgba(232,162,0,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,162,0,0.3);
+  }
+
+  .badge-viewer {
+    background: rgba(59,184,122,0.1);
+    color: #5dd49a;
+    border: 1px solid rgba(59,184,122,0.25);
+  }
+
+  .footer-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex: 1;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  .shake { animation: shake 0.4s ease; }
+
+  .page { animation: fadeUp 0.45s ease both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- IZQUIERDA: Branding -->
+  <div class="branding">
+    <div class="brand-tag">
+      <div class="brand-tag-dot"></div>
+      <span>Sistema en línea</span>
+    </div>
+
+    <h1 class="brand-title">
+      LOGÍSTICA<br><em>VALTEC</em>
+    </h1>
+
+    <p class="brand-desc">
+      Plataforma de control de inventario, custodia de activos y trazabilidad de movimientos para operaciones aeroportuarias.
+    </p>
+
+    <div class="brand-stats">
+      <div class="stat">
+        <span class="stat-value">LATAM</span>
+        <span class="stat-label">Aerolínea</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value">SKY</span>
+        <span class="stat-label">Aerolínea</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value">24/7</span>
+        <span class="stat-label">Operación</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DERECHA: Formulario -->
+  <div class="form-panel">
+    <div class="form-header">
+      <p class="form-eyebrow">Control de acceso</p>
+      <h2 class="form-title">Iniciar sesión</h2>
+      <p class="form-subtitle">Ingrese sus credenciales para continuar</p>
+    </div>
+
+    <div id="alert-error" class="alert alert-error">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span id="alert-error-text">Credenciales incorrectas. Intente nuevamente.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="username">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2.5 14c0-3.038 2.462-5.5 5.5-5.5s5.5 2.462 5.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Usuario
+      </label>
+      <div class="input-wrapper">
+        <input type="text" id="username" class="form-input"
+               placeholder="Ingrese su usuario"
+               autocomplete="username" autofocus>
+        <span class="input-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M3 14c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="password">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Contraseña
+      </label>
+      <div class="input-wrapper">
+        <input type="password" id="password" class="form-input"
+               placeholder="••••••••••"
+               autocomplete="current-password">
+        <button class="toggle-pass" type="button" onclick="togglePassword()"
+                aria-label="Mostrar contraseña">
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-login" id="btn-login" onclick="handleLogin()">
+      <span id="btn-text">Ingresar al sistema</span>
+      <div class="spinner" id="spinner"></div>
+      <svg id="btn-arrow" width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M3 9h12M10 5l4 4-4 4" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="form-footer">
+      <span class="badge-role badge-admin">Admin</span>
+      <span class="badge-role badge-viewer">Consulta</span>
+      <span class="footer-text">Dos perfiles disponibles en este sistema</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const USERS = {
+    admin:  { password: 'Corpus8080', rol: 'admin',  nombre: 'Administrador' },
+    valtec: { password: 'valtec',     rol: 'viewer', nombre: 'Usuario Valtec' }
+  };
+
+  let passwordVisible = false;
+  function togglePassword() {
+    passwordVisible = !passwordVisible;
+    document.getElementById('password').type = passwordVisible ? 'text' : 'password';
+    document.getElementById('eye-icon').innerHTML = passwordVisible
+      ? `<path d="M2 2l12 12M6.9 6.9A2 2 0 0111 9M9 3c4.5 0 7 5 7 5a12.5 12.5 0 01-2.6 3M5.5 5.5A12.6 12.6 0 001 9s2.5 5 7 5c1.4 0 2.7-.4 3.8-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>`
+      : `<path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.2"/>`;
+  }
+
+  document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+  document.getElementById('username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
+
+  function handleLogin() {
+    const usuario = document.getElementById('username').value.trim().toLowerCase();
+    const clave   = document.getElementById('password').value;
+    const btn     = document.getElementById('btn-login');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btn-text');
+    const arrow   = document.getElementById('btn-arrow');
+    const alertEl = document.getElementById('alert-error');
+
+    alertEl.style.display = 'none';
+    btn.classList.add('loading');
+    spinner.style.display = 'block';
+    btnText.textContent   = 'Verificando...';
+    arrow.style.display   = 'none';
+
+    setTimeout(() => {
+      const user = USERS[usuario];
+
+      if (user && user.password === clave) {
+        btnText.textContent      = '¡Acceso concedido!';
+        spinner.style.display    = 'none';
+        btn.style.background     = '#3bb87a';
+
+        sessionStorage.setItem('valtec_session', JSON.stringify({
+          usuario,
+          rol:      user.rol,
+          nombre:   user.nombre,
+          permisos: user.rol === 'admin'
+            ? ['all']
+            : ['trazabilidad', 'custodia', 'custodiaRUT']
+        }));
+
+        setTimeout(() => {
+          const dest = user.rol === 'admin' ? '/index.html' : '/viewer.html';
+          if (window.location.protocol === 'file:') {
+            alert(`✅ Login exitoso — ${user.nombre} (${user.rol})\n\nEn producción redirige a: ${dest}`);
+            resetBtn();
+          } else {
+            window.location.href = dest;
+          }
+        }, 800);
+
+      } else {
+        resetBtn();
+        alertEl.style.display = 'flex';
+        document.getElementById('alert-error-text').textContent = 'Usuario o contraseña incorrectos. Intente nuevamente.';
+        document.querySelector('.form-panel').classList.add('shake');
+        setTimeout(() => document.querySelector('.form-panel').classList.remove('shake'), 400);
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    }, 300);
+  }
+
+  function resetBtn() {
+    const btn = document.getElementById('btn-login');
+    btn.classList.remove('loading');
+    btn.style.background = '';
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('btn-arrow').style.display = '';
+    document.getElementById('btn-text').textContent    = 'Ingresar al sistema';
+  }
+</script>
+</body>
+</html>

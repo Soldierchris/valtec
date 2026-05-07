@@ -200,4 +200,50 @@ router.get('/bodega-grande', async (req, res) => {
     }
 });
 
+// --- RUTA: ACTIVOS EN CUSTODIA POR COLABORADOR ---
+router.get('/custodia/:rut', async (req, res) => {
+    const rut = req.params.rut;
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                p.descripcion,
+                p.categoria,
+                m.serie,
+                m.modelo,
+                m.fecha_movimiento,
+                DATEDIFF(NOW(), m.fecha_movimiento) AS dias_en_custodia,
+                m.ubicacion
+            FROM movimiento m
+            JOIN producto p ON m.id_articulo = p.id_articulo
+            WHERE m.tipo_movimiento = 'Entrega'
+              AND m.rut_colaborador = ?
+              AND (
+                  -- Activos con serie: no existe devolución posterior
+                  (m.serie IS NOT NULL AND NOT EXISTS (
+                      SELECT 1 FROM movimiento m2
+                      WHERE m2.serie = m.serie
+                        AND m2.tipo_movimiento = 'Devolución'
+                        AND m2.fecha_movimiento > m.fecha_movimiento
+                  ))
+                  OR
+                  -- Activos sin serie: balance positivo de entregas vs devoluciones
+                  (m.serie IS NULL AND (
+                      SELECT 
+                          COALESCE(SUM(CASE WHEN m3.tipo_movimiento = 'Entrega' THEN m3.cantidad ELSE 0 END), 0) -
+                          COALESCE(SUM(CASE WHEN m3.tipo_movimiento = 'Devolución' THEN m3.cantidad ELSE 0 END), 0)
+                      FROM movimiento m3
+                      WHERE m3.id_articulo = m.id_articulo
+                        AND m3.rut_colaborador = ?
+                  ) > 0)
+              )
+            ORDER BY m.fecha_movimiento DESC
+        `, [rut, rut]);
+
+        res.json(rows);
+    } catch (error) {
+        console.error("Error custodia:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

@@ -82,6 +82,7 @@
                 <button class="btn btn-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalDevolucion">↩️ Registrar Devolución</button>
 <button class="btn btn-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalTrazabilidad">🔍 Custodia de Activo</button>
 <button class="btn btn-outline-info w-100 mb-2" onclick="cargarVistaTrazabilidad()">📋 Trazabilidad</button>
+<button class="btn btn-outline-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalCustodia">👤 Custodio por RUT</button>
             </div>
 
             <main class="col-md-10 p-4">
@@ -514,6 +515,65 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CUSTODIO POR RUT -->
+<div class="modal fade" id="modalCustodia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">👤 Activos en Custodia por Colaborador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Buscador de colaborador (reutiliza el mismo patrón de autocompletado) -->
+                <div class="position-relative mb-3">
+                    <label class="form-label fw-bold">Buscar Colaborador (RUT o Nombre)</label>
+                    <input type="text" id="rut-custodia" class="form-control form-control-lg"
+                           placeholder="Escriba RUT o nombre..." autocomplete="off">
+                    <ul id="sugerencias-colab-custodia" class="list-group position-absolute w-100 shadow"
+                        style="display:none; background:white !important; max-height:200px; overflow-y:auto; z-index:10500 !important;"></ul>
+                </div>
+
+                <!-- Badge con nombre confirmado -->
+                <div id="custodio-confirmado" class="mb-3 d-none">
+                    <span class="badge bg-warning text-dark fs-6">
+                        👤 <span id="custodio-nombre"></span>
+                    </span>
+                    <span class="badge bg-secondary ms-2" id="custodio-rut-badge"></span>
+                </div>
+
+                <!-- Tabla de resultados -->
+                <div id="tabla-custodia-container" class="d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0">Activos en Custodia</h6>
+                        <span class="badge bg-danger" id="badge-total-custodia">0 activos</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-sm">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>N° Serie / Modelo</th>
+                                    <th>Fecha Entrega</th>
+                                    <th>Días en Custodia</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-custodia"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="custodia-sin-resultados" class="alert alert-success d-none">
+                    ✅ Este colaborador no tiene activos pendientes de devolución.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
