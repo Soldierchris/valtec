@@ -1,13 +1,11 @@
 const mariadb = require('mariadb');
 require('dotenv').config();
 
-const pool = mariadb.createPool({
-     host: process.env.DB_HOST || 'localhost', 
-     user: process.env.DB_USER || 'root', 
-     password: process.env.DB_PASSWORD,
-     database: process.env.DB_NAME || 'inventario_bodega',
-     connectionLimit: 5
-});
+const pool = require('./db');
+
+module.exports = {
+    query: (text, params) => pool.execute(text, params).then(([rows]) => rows)
+};
 
 module.exports = {
     query: (text, params) => pool.query(text, params)

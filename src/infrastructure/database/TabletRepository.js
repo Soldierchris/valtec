@@ -1,5 +1,5 @@
 const pool = require('./mariadb');
-const Tablet = require('../../core/entities/tablet');
+const Tablet = require('../../core/entities/Tablet');
 
 class TabletRepository {
     async obtenerTodas() {
