@@ -1,10 +1,21 @@
 // ==========================================
-// 1. CARGA DE REPORTES (TABLAS LATAM/SKY) NO TOCAR TOTALMENTE OPERATICO 
+// 1. CARGA DE REPORTES (TABLAS LATAM/SKY)
 // ==========================================
 async function cargarFormularios(aerolinea) {
-    const titulo = document.getElementById('titulo-reporte');
-    const cuerpo = document.getElementById('tabla-cuerpo');
+    const titulo   = document.getElementById('titulo-reporte');
+    const cuerpo   = document.getElementById('tabla-cuerpo');
+    const cabecera = document.querySelector('thead'); // ← AGREGAR
+
     if (!cuerpo) return;
+
+    // ← RESETEAR CABECERA (fix del bug "undefined")
+    cabecera.innerHTML = `
+        <tr>
+            <th>ID</th>
+            <th>Descripción</th>
+            <th>Tipo Documento</th>
+            <th class="text-center">Stock Disponible</th>
+        </tr>`;
 
     try {
         const respuesta = await fetch(`/api/formularios/${aerolinea}`);
@@ -13,6 +24,7 @@ async function cargarFormularios(aerolinea) {
 
         if (datos.length === 0) {
             cuerpo.innerHTML = '<tr><td colspan="4" class="text-center">No hay datos</td></tr>';
+            if (titulo) titulo.innerText = `Inventario de Formularios: ${aerolinea}`;
             return;
         }
 
@@ -21,15 +33,26 @@ async function cargarFormularios(aerolinea) {
                 <tr>
                     <td>${item.id_articulo}</td>
                     <td>${item.descripcion}</td>
-                    <td>${item.tipo_documento}</td>
-                    <td><span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">${item.stock_disponible}</span></td>
+                    <td>${item.tipo_documento ?? '—'}</td>
+                    <td class="text-center">
+                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}
+                              d-inline-flex align-items-center justify-content-center"
+                              style="min-width:2rem; height:1.5rem;">
+                            ${item.stock_disponible}
+                        </span>
+                    </td>
                 </tr>`;
         });
+
         if (titulo) titulo.innerText = `Inventario de Formularios: ${aerolinea}`;
+
     } catch (error) {
         console.error("Error cargando reportes:", error);
+        cuerpo.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar datos</td></tr>';
     }
-}  
+}
+
+
 
 // ==========================================
 // VERIFICA CATEGORIA AL INGRESAR PRODUCTOS  
@@ -166,8 +189,8 @@ async function cargarTablets() {
 // INVENTARIO BODEGA SEGURIDAD
 // ==========================================
 async function cargarBodegaSeguridad() {
-    const titulo = document.getElementById('titulo-reporte');
-    const cuerpo = document.getElementById('tabla-cuerpo');
+    const titulo   = document.getElementById('titulo-reporte');
+    const cuerpo   = document.getElementById('tabla-cuerpo');
     const cabecera = document.querySelector('thead');
 
     titulo.innerText = "Cargando Inventario Bodega Seguridad...";
@@ -178,14 +201,12 @@ async function cargarBodegaSeguridad() {
             <th>Descripción</th>
             <th>Modelo</th>
             <th>N° de Serie</th>
-            <th>Stock Disponible</th>
-        </tr>
-    `;
+            <th class="text-center">Stock Disponible</th>
+        </tr>`;
 
     try {
         const respuesta = await fetch('/api/movimientos/bodega-seguridad');
         const datos = await respuesta.json();
-
         cuerpo.innerHTML = '';
 
         if (datos.length === 0) {
@@ -201,13 +222,14 @@ async function cargarBodegaSeguridad() {
                     <td>${item.descripcion}</td>
                     <td>${item.modelo || 'N/A'}</td>
                     <td><strong>${item.num_serie || 'Sin serie'}</strong></td>
-                    <td>
-                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">
+                    <td class="text-center">
+                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}
+                              d-inline-flex align-items-center justify-content-center"
+                              style="min-width:2rem; height:1.5rem;">
                             ${item.stock_disponible}
                         </span>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
 
         titulo.innerText = "Inventario Bodega Seguridad";
@@ -217,12 +239,15 @@ async function cargarBodegaSeguridad() {
         cuerpo.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar inventario</td></tr>';
     }
 }
+
+
+
 // ==========================================
 // INVENTARIO BODEGA GRANDE
 // ==========================================
 async function cargarBodegaGrande() {
-    const titulo = document.getElementById('titulo-reporte');
-    const cuerpo = document.getElementById('tabla-cuerpo');
+    const titulo   = document.getElementById('titulo-reporte');
+    const cuerpo   = document.getElementById('tabla-cuerpo');
     const cabecera = document.querySelector('thead');
 
     titulo.innerText = "Cargando Inventario Bodega Grande...";
@@ -234,14 +259,12 @@ async function cargarBodegaGrande() {
             <th>Categoría</th>
             <th>Modelo</th>
             <th>N° de Serie</th>
-            <th>Stock Disponible</th>
-        </tr>
-    `;
+            <th class="text-center">Stock Disponible</th>
+        </tr>`;
 
     try {
         const respuesta = await fetch('/api/movimientos/bodega-grande');
         const datos = await respuesta.json();
-
         cuerpo.innerHTML = '';
 
         if (datos.length === 0) {
@@ -258,13 +281,14 @@ async function cargarBodegaGrande() {
                     <td><span class="badge bg-secondary">${item.categoria}</span></td>
                     <td>${item.modelo || 'N/A'}</td>
                     <td><strong>${item.num_serie || '—'}</strong></td>
-                    <td>
-                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">
+                    <td class="text-center">
+                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}
+                              d-inline-flex align-items-center justify-content-center"
+                              style="min-width:2rem; height:1.5rem;">
                             ${item.stock_disponible}
                         </span>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
 
         titulo.innerText = "Inventario Bodega Grande";
