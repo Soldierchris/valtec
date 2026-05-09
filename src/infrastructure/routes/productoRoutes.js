@@ -19,6 +19,36 @@ router.get('/buscar', async (req, res) => {
     }
 });
 
+// GET /api/productos/:id/ubicacion-actual
+// Devuelve la bodega donde está actualmente el producto (último ingreso o devolución)
+router.get('/:id/ubicacion-actual', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                m.ubicacion,
+                m.tipo_movimiento,
+                m.fecha_movimiento,
+                -- Stock disponible en esa ubicación
+                (
+                    SELECT 
+                        COALESCE(SUM(CASE WHEN m2.tipo_movimiento IN ('Ingreso','Devolución') THEN m2.cantidad ELSE 0 END), 0) -
+                        COALESCE(SUM(CASE WHEN m2.tipo_movimiento = 'Entrega' THEN m2.cantidad ELSE 0 END), 0)
+                    FROM movimiento m2
+                    WHERE m2.id_articulo = m.id_articulo
+                      AND m2.ubicacion = m.ubicacion
+                ) AS stock_en_bodega
+            FROM movimiento m
+            WHERE m.id_articulo = ?
+              AND m.tipo_movimiento IN ('Ingreso', 'Devolución')
+            ORDER BY m.fecha_movimiento DESC
+            LIMIT 1
+        `, [req.params.id]);
+        res.json(rows[0] || { ubicacion: null, stock_en_bodega: 0 });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // GET /api/productos/:id/detalle
 router.get('/:id/detalle', async (req, res) => {
     try {

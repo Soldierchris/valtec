@@ -1,21 +1,10 @@
 // ==========================================
-// 1. CARGA DE REPORTES (TABLAS LATAM/SKY)
+// 1. CARGA DE REPORTES (TABLAS LATAM/SKY) NO TOCAR TOTALMENTE OPERATICO 
 // ==========================================
 async function cargarFormularios(aerolinea) {
-    const titulo   = document.getElementById('titulo-reporte');
-    const cuerpo   = document.getElementById('tabla-cuerpo');
-    const cabecera = document.querySelector('thead'); // ← AGREGAR
-
+    const titulo = document.getElementById('titulo-reporte');
+    const cuerpo = document.getElementById('tabla-cuerpo');
     if (!cuerpo) return;
-
-    // ← RESETEAR CABECERA (fix del bug "undefined")
-    cabecera.innerHTML = `
-        <tr>
-            <th>ID</th>
-            <th>Descripción</th>
-            <th>Tipo Documento</th>
-            <th class="text-center">Stock Disponible</th>
-        </tr>`;
 
     try {
         const respuesta = await fetch(`/api/formularios/${aerolinea}`);
@@ -24,7 +13,6 @@ async function cargarFormularios(aerolinea) {
 
         if (datos.length === 0) {
             cuerpo.innerHTML = '<tr><td colspan="4" class="text-center">No hay datos</td></tr>';
-            if (titulo) titulo.innerText = `Inventario de Formularios: ${aerolinea}`;
             return;
         }
 
@@ -33,26 +21,15 @@ async function cargarFormularios(aerolinea) {
                 <tr>
                     <td>${item.id_articulo}</td>
                     <td>${item.descripcion}</td>
-                    <td>${item.tipo_documento ?? '—'}</td>
-                    <td class="text-center">
-                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}
-                              d-inline-flex align-items-center justify-content-center"
-                              style="min-width:2rem; height:1.5rem;">
-                            ${item.stock_disponible}
-                        </span>
-                    </td>
+                    <td>${item.tipo_documento}</td>
+                    <td><span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">${item.stock_disponible}</span></td>
                 </tr>`;
         });
-
         if (titulo) titulo.innerText = `Inventario de Formularios: ${aerolinea}`;
-
     } catch (error) {
         console.error("Error cargando reportes:", error);
-        cuerpo.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar datos</td></tr>';
     }
-}
-
-
+}  
 
 // ==========================================
 // VERIFICA CATEGORIA AL INGRESAR PRODUCTOS  
@@ -189,8 +166,8 @@ async function cargarTablets() {
 // INVENTARIO BODEGA SEGURIDAD
 // ==========================================
 async function cargarBodegaSeguridad() {
-    const titulo   = document.getElementById('titulo-reporte');
-    const cuerpo   = document.getElementById('tabla-cuerpo');
+    const titulo = document.getElementById('titulo-reporte');
+    const cuerpo = document.getElementById('tabla-cuerpo');
     const cabecera = document.querySelector('thead');
 
     titulo.innerText = "Cargando Inventario Bodega Seguridad...";
@@ -201,12 +178,14 @@ async function cargarBodegaSeguridad() {
             <th>Descripción</th>
             <th>Modelo</th>
             <th>N° de Serie</th>
-            <th class="text-center">Stock Disponible</th>
-        </tr>`;
+            <th>Stock Disponible</th>
+        </tr>
+    `;
 
     try {
         const respuesta = await fetch('/api/movimientos/bodega-seguridad');
         const datos = await respuesta.json();
+
         cuerpo.innerHTML = '';
 
         if (datos.length === 0) {
@@ -222,14 +201,13 @@ async function cargarBodegaSeguridad() {
                     <td>${item.descripcion}</td>
                     <td>${item.modelo || 'N/A'}</td>
                     <td><strong>${item.num_serie || 'Sin serie'}</strong></td>
-                    <td class="text-center">
-                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}
-                              d-inline-flex align-items-center justify-content-center"
-                              style="min-width:2rem; height:1.5rem;">
+                    <td>
+                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">
                             ${item.stock_disponible}
                         </span>
                     </td>
-                </tr>`;
+                </tr>
+            `;
         });
 
         titulo.innerText = "Inventario Bodega Seguridad";
@@ -239,15 +217,12 @@ async function cargarBodegaSeguridad() {
         cuerpo.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar inventario</td></tr>';
     }
 }
-
-
-
 // ==========================================
 // INVENTARIO BODEGA GRANDE
 // ==========================================
 async function cargarBodegaGrande() {
-    const titulo   = document.getElementById('titulo-reporte');
-    const cuerpo   = document.getElementById('tabla-cuerpo');
+    const titulo = document.getElementById('titulo-reporte');
+    const cuerpo = document.getElementById('tabla-cuerpo');
     const cabecera = document.querySelector('thead');
 
     titulo.innerText = "Cargando Inventario Bodega Grande...";
@@ -259,12 +234,14 @@ async function cargarBodegaGrande() {
             <th>Categoría</th>
             <th>Modelo</th>
             <th>N° de Serie</th>
-            <th class="text-center">Stock Disponible</th>
-        </tr>`;
+            <th>Stock Disponible</th>
+        </tr>
+    `;
 
     try {
         const respuesta = await fetch('/api/movimientos/bodega-grande');
         const datos = await respuesta.json();
+
         cuerpo.innerHTML = '';
 
         if (datos.length === 0) {
@@ -281,14 +258,13 @@ async function cargarBodegaGrande() {
                     <td><span class="badge bg-secondary">${item.categoria}</span></td>
                     <td>${item.modelo || 'N/A'}</td>
                     <td><strong>${item.num_serie || '—'}</strong></td>
-                    <td class="text-center">
-                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}
-                              d-inline-flex align-items-center justify-content-center"
-                              style="min-width:2rem; height:1.5rem;">
+                    <td>
+                        <span class="badge ${item.stock_disponible > 0 ? 'bg-success' : 'bg-danger'}">
                             ${item.stock_disponible}
                         </span>
                     </td>
-                </tr>`;
+                </tr>
+            `;
         });
 
         titulo.innerText = "Inventario Bodega Grande";
@@ -740,13 +716,54 @@ if (inputEntregaProd && listaEntregaProd) {
                     const item = document.createElement('a');
                     item.className = 'list-group-item list-group-item-action';
                     item.innerHTML = `<strong>${p.id_articulo}</strong> - ${p.descripcion} <span class="badge bg-info">Stock: ${p.stock}</span>`;
-                    item.onclick = () => {
+                    item.onclick = async () => {
                         document.getElementById('id-articulo-ent').value = p.id_articulo;
                         document.getElementById('display-id-ent').value = p.id_articulo;
                         document.getElementById('cat-ent').value = p.categoria;
                         inputEntregaProd.value = p.descripcion;
                         document.getElementById('cant-ent').max = p.stock;
                         listaEntregaProd.style.display = 'none';
+
+                        // ── AUTO-DETECCIÓN DE BODEGA ORIGEN ──
+                        const textoDisplay  = document.getElementById('bodega-origen-texto');
+                        const displayDiv    = document.getElementById('bodega-origen-display');
+                        const stockInfo     = document.getElementById('stock-bodega-info');
+                        const stockValor    = document.getElementById('stock-bodega-valor');
+                        const inputBodega   = document.getElementById('bodega-origen');
+
+                        textoDisplay.textContent = 'Detectando bodega...';
+                        displayDiv.style.borderColor = '#6c757d';
+
+                        try {
+                            const resUbic = await fetch(`/api/productos/${p.id_articulo}/ubicacion-actual`);
+                            const ubicData = await resUbic.json();
+
+                            if (ubicData.ubicacion) {
+                                inputBodega.value = ubicData.ubicacion;
+                                textoDisplay.textContent = ubicData.ubicacion;
+                                textoDisplay.style.color = '#0d6efd';
+                                textoDisplay.style.fontStyle = 'normal';
+                                displayDiv.style.borderColor = '#0d6efd';
+                                displayDiv.style.background = '#e8f4fd';
+                                // Mostrar stock disponible en esa bodega
+                                if (ubicData.stock_en_bodega !== undefined) {
+                                    stockValor.textContent = ubicData.stock_en_bodega;
+                                    stockValor.className = ubicData.stock_en_bodega > 0 ? 'text-success' : 'text-danger';
+                                    stockInfo.classList.remove('d-none');
+                                }
+                            } else {
+                                inputBodega.value = '';
+                                textoDisplay.textContent = '⚠️ Sin movimientos previos';
+                                textoDisplay.style.color = '#dc3545';
+                                textoDisplay.style.fontStyle = 'italic';
+                                displayDiv.style.borderColor = '#dc3545';
+                                displayDiv.style.background = '#fff5f5';
+                                stockInfo.classList.add('d-none');
+                            }
+                        } catch (e) {
+                            textoDisplay.textContent = 'Error al detectar bodega';
+                            textoDisplay.style.color = '#dc3545';
+                        }
 
                         // Mostrar panel serie si aplica
                         const panelSerie = document.getElementById('panel-serie-entrega');
@@ -805,6 +822,14 @@ if (inputColab && listaColab) {
                         document.getElementById('texto-nombre-colab').textContent = 
                             `${c.nombre1} ${c.nombre2 || ''} ${c.apellido1} ${c.apellido2 || ''}`.trim();
                         document.getElementById('nombre-colaborador-confirmado').classList.remove('d-none');
+                        // Mostrar sector si existe
+                        const badgeSector = document.getElementById('badge-sector-colab');
+                        if (c.sector) {
+                            document.getElementById('texto-sector-colab').textContent = c.sector;
+                            badgeSector.style.display = 'inline-flex';
+                        } else {
+                            badgeSector.style.display = 'none';
+                        }
                     };
                     listaColab.appendChild(item);
                 });
@@ -821,12 +846,18 @@ if (inputColab && listaColab) {
 async function confirmarEntrega() {
     const categoria = document.getElementById('cat-ent').value;
     const idArticulo = document.getElementById('id-articulo-ent').value;
+    const bodegaOrigen = document.getElementById('bodega-origen').value;
+
+    if (!bodegaOrigen) {
+        alert("⚠️ No se pudo detectar la bodega de origen. Asegúrese de haber ingresado previamente el producto.");
+        return;
+    }
 
     const datos = {
         id_articulo: idArticulo,
         rut_colaborador: document.getElementById('rut-colaborador').value,
         cantidad: document.getElementById('cant-ent').value,
-        ubicacion: document.getElementById('bodega-origen').value,
+        ubicacion: bodegaOrigen,
         id_usuario: 1,
         serie: null,
         modelo: null
@@ -1309,7 +1340,35 @@ async function confirmarDevolucion() {
 }
 
 
-// ===== CUSTODIO POR RUT =====
+// ==========================================
+// RESET MODAL ENTREGA AL CERRAR
+// ==========================================
+document.getElementById('modalEntrega')?.addEventListener('hidden.bs.modal', () => {
+    // Reset bodega display
+    const textoDisplay = document.getElementById('bodega-origen-texto');
+    const displayDiv   = document.getElementById('bodega-origen-display');
+    const stockInfo    = document.getElementById('stock-bodega-info');
+    if (textoDisplay) {
+        textoDisplay.textContent  = 'Seleccione un producto...';
+        textoDisplay.style.color  = '#6c757d';
+        textoDisplay.style.fontStyle = 'italic';
+    }
+    if (displayDiv) {
+        displayDiv.style.borderColor = '#6c757d';
+        displayDiv.style.background  = '#f8f9fa';
+    }
+    if (stockInfo) stockInfo.classList.add('d-none');
+    document.getElementById('bodega-origen').value = '';
+    // Reset sector badge
+    const badgeSector = document.getElementById('badge-sector-colab');
+    if (badgeSector) badgeSector.style.display = 'none';
+    document.getElementById('nombre-colaborador-confirmado')?.classList.add('d-none');
+    document.getElementById('panel-serie-entrega')?.classList.add('d-none');
+    document.getElementById('btn-confirmar-entrega').disabled = false;
+});
+
+// ==========================================
+// CUSTODIO POR RUT
 let rutCustodioSeleccionado = null;
 
 document.getElementById('rut-custodia')?.addEventListener('input', async function () {

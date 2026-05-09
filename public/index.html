@@ -346,9 +346,12 @@
                                placeholder="Escriba RUT o nombre..." autocomplete="off">
                         <ul id="sugerencias-colab" class="list-group position-absolute w-100 shadow"
                             style="display:none; background:white !important; max-height:200px; overflow-y:auto; z-index:10500 !important;"></ul>
-                        <!-- Nombre del colaborador confirmado -->
-                        <div id="nombre-colaborador-confirmado" class="mt-1 d-none">
+                        <!-- Nombre + Sector del colaborador confirmado -->
+                        <div id="nombre-colaborador-confirmado" class="mt-2 d-none d-flex align-items-center gap-2 flex-wrap">
                             <span class="badge bg-success fs-6">✅ <span id="texto-nombre-colab"></span></span>
+                            <span class="badge bg-info text-dark fs-6" id="badge-sector-colab" style="display:none;">
+                                🏢 Sector: <span id="texto-sector-colab"></span>
+                            </span>
                         </div>
                     </div>
 
@@ -373,11 +376,20 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Bodega Origen</label>
-                        <select id="bodega-origen" class="form-select">
-                            <option value="Bodega Grande">Bodega Grande</option>
-                            <option value="Bodega Chica">Bodega Chica</option>
-                            <option value="Bodega Seguridad">Bodega Seguridad</option>
-                        </select>
+                        <!-- Input oculto que guarda el valor real -->
+                        <input type="hidden" id="bodega-origen">
+                        <!-- Display visual (no editable) -->
+                        <div id="bodega-origen-display" 
+                             style="min-height:38px; padding:6px 12px; border-radius:6px; border:2px solid #6c757d;
+                                    background:#f8f9fa; display:flex; align-items:center; gap:8px; color:#495057;">
+                            <span style="font-size:1rem;">📦</span>
+                            <span id="bodega-origen-texto" style="font-weight:600; color:#6c757d; font-style:italic;">
+                                Seleccione un producto...
+                            </span>
+                        </div>
+                        <small id="stock-bodega-info" class="text-muted d-none">
+                            Stock en bodega: <strong id="stock-bodega-valor"></strong> unidades
+                        </small>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Cantidad a Entregar</label>
