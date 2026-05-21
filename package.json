@@ -25,5 +25,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Soldierchris/valtec.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Soldierchris/valtec/issues"
+  },
+  "homepage": "https://github.com/Soldierchris/valtec#readme"
 }

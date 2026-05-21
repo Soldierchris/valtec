@@ -1,0 +1,31 @@
+{
+  "name": "Entorno de Desarrollo Node.js",
+  
+  // Utiliza una imagen oficial de Node.js optimizada para contenedores de desarrollo
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bullseye",
+
+  // Configura las opciones que se ejecutarán dentro del contenedor
+  "customizations": {
+    "vscode": {
+      // Instala automáticamente estas extensiones esenciales DENTRO del contenedor
+      "extensions": [
+        "dbaeumer.vscode-eslint",      // Corrector de estilo de código
+        "esbenp.prettier-vscode",      // Formateador de código
+        "christian-kohler.path-intellisense" // Autocompletado de rutas de archivos
+      ],
+      "settings": {
+        // Obliga a VS Code a usar la terminal de Linux del contenedor por defecto
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // Expone el puerto de tu servidor Node al exterior (tu PC local) automáticamente
+  "forwardPorts": [3000],
+
+  // Comando opcional: Ejecuta 'npm install' automáticamente al crear el contenedor
+  "postCreateCommand": "npm install",
+
+  // Conéctate como usuario no-raíz (non-root) por seguridad y buenas prácticas
+  "remoteUser": "node"
+}
