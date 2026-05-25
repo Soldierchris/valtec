@@ -134,7 +134,7 @@ router.get('/bodega-seguridad', async (req, res) => {
             INNER JOIN movimiento m ON p.id_articulo = m.id_articulo
             WHERE m.ubicacion = 'Bodega Seguridad'
             GROUP BY p.id_articulo, p.descripcion, ds.num_serie, ds.modelo
-            ORDER BY p.id_articulo
+            ORDER BY p.descripcion
         `);
         res.json(rows);
     } catch (error) {
@@ -191,7 +191,7 @@ router.get('/bodega-grande', async (req, res) => {
             WHERE m.ubicacion = 'Bodega Grande'
             GROUP BY p.id_articulo, p.descripcion, p.categoria, ds.num_serie, ds.modelo
             HAVING stock_disponible > 0
-            ORDER BY p.categoria, p.id_articulo
+            ORDER BY p.descripcion
         `);
         res.json(rows);
     } catch (error) {
@@ -212,9 +212,11 @@ router.get('/custodia/:rut', async (req, res) => {
                 m.modelo,
                 m.fecha_movimiento,
                 DATEDIFF(NOW(), m.fecha_movimiento) AS dias_en_custodia,
-                m.ubicacion
+                m.ubicacion,
+                c.sector
             FROM movimiento m
             JOIN producto p ON m.id_articulo = p.id_articulo
+            LEFT JOIN colaborador c ON m.rut_colaborador = c.rut
             WHERE m.tipo_movimiento = 'Entrega'
               AND m.rut_colaborador = ?
               AND (
