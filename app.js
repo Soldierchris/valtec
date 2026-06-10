@@ -1,3 +1,12 @@
+// Al inicio de app.js
+const envFile = process.env.NODE_ENV === 'development' 
+  ? '.env.development' 
+  : '.env';
+require('dotenv').config({ path: envFile });
+
+
+
+
 const express = require('express');
 const cors = require('cors');
 const formularioRoutes = require('./src/infrastructure/routes/formularioRoutes');
