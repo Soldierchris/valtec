@@ -1,18 +1,17 @@
 {
   "name": "valtec",
   "version": "1.0.0",
-  "script": {
+  "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+   
+    "dev": "cross-env NODE_ENV=development npx dotenvx run --env-file=.env.development -- nodemon app.js",
+    "prod": "node app.js"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -21,9 +20,19 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mariadb": "^3.5.2",
-    "mysql2": "^3.22.3"
+    "mysql2": "^3.22.3",
+    "nodemailer": "^8.0.11"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.14"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Soldierchris/valtec.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Soldierchris/valtec/issues"
+  },
+  "homepage": "https://github.com/Soldierchris/valtec#readme"
 }
