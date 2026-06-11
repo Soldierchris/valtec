@@ -221,6 +221,7 @@ export async function confirmarEntrega() {
         id_usuario:       1,
         serie:            null,
         modelo:           null,
+        cc:               typeof window.ccObtener === 'function' ? window.ccObtener('entrega') : [],
     };
 
     if (!datos.id_articulo || !datos.rut_colaborador || !datos.cantidad) {

@@ -1,12 +1,3 @@
-// Al inicio de app.js
-const envFile = process.env.NODE_ENV === 'development' 
-  ? '.env.development' 
-  : '.env';
-require('dotenv').config({ path: envFile });
-
-
-
-
 const express = require('express');
 const cors = require('cors');
 const formularioRoutes = require('./src/infrastructure/routes/formularioRoutes');
@@ -14,6 +5,7 @@ const tabletRoutes = require('./src/infrastructure/routes/tabletRoutes');
 const colaboradorRoutes = require('./src/infrastructure/routes/colaboradorRoutes');
 const productoRoutes = require('./src/infrastructure/routes/productoRoutes');
 const movimientoRoutes = require('./src/infrastructure/routes/movimientoRoutes');
+const notificacionRoutes = require('./src/infrastructure/routes/notificacionRoutes');
 
 // En tu app.js añade esto con las otras rutas:
 const app = express();
@@ -45,7 +37,8 @@ app.use('/api/formularios', formularioRoutes);
 app.use('/api/tablets', tabletRoutes)
 app.use('/api/colaboradores', colaboradorRoutes);
 app.use('/api/productos', productoRoutes);
-app.use('/api/movimientos', movimientoRoutes)
+app.use('/api/movimientos', movimientoRoutes);
+app.use('/api/notificaciones', notificacionRoutes);
 
 
 const PORT = process.env.PORT || 3000;

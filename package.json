@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node app.js",
-    "dev": "cross-env NODE_ENV=development nodemon app.js",
+   
+    "dev": "cross-env NODE_ENV=development npx dotenvx run --env-file=.env.development -- nodemon app.js",
     "prod": "node app.js"
   },
   "engines": {
@@ -19,7 +20,8 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mariadb": "^3.5.2",
-    "mysql2": "^3.22.3"
+    "mysql2": "^3.22.3",
+    "nodemailer": "^8.0.11"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

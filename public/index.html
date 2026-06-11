@@ -415,6 +415,24 @@
                 </form>
             </div>
             <div class="modal-footer">
+                <!-- SELECTOR DE DESTINATARIOS CC -->
+                <div id="cc-entrega-container" class="w-100 mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <label class="form-label mb-0 fw-bold text-muted" style="font-size:12px; white-space:nowrap;">
+                            📧 Copiar a:
+                        </label>
+                        <div class="position-relative flex-grow-1">
+                            <input type="text" id="cc-entrega-input" class="form-control form-control-sm"
+                                   placeholder="Buscar persona o escribir correo..." autocomplete="off">
+                            <ul id="cc-entrega-sugerencias" class="list-group position-absolute w-100 shadow"
+                                style="display:none; z-index:10600; max-height:160px; overflow-y:auto; top:100%;"></ul>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ccAgregarManual('entrega')">
+                            + Agregar
+                        </button>
+                    </div>
+                    <div id="cc-entrega-tags" class="d-flex flex-wrap gap-1"></div>
+                </div>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btn-confirmar-entrega" 
                         onclick="confirmarEntrega()">Confirmar Entrega</button>
@@ -502,6 +520,24 @@
                 </form>
             </div>
             <div class="modal-footer">
+                <!-- SELECTOR DE DESTINATARIOS CC -->
+                <div id="cc-devolucion-container" class="w-100 mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <label class="form-label mb-0 fw-bold text-muted" style="font-size:12px; white-space:nowrap;">
+                            📧 Copiar a:
+                        </label>
+                        <div class="position-relative flex-grow-1">
+                            <input type="text" id="cc-devolucion-input" class="form-control form-control-sm"
+                                   placeholder="Buscar persona o escribir correo..." autocomplete="off">
+                            <ul id="cc-devolucion-sugerencias" class="list-group position-absolute w-100 shadow"
+                                style="display:none; z-index:10600; max-height:160px; overflow-y:auto; top:100%;"></ul>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ccAgregarManual('devolucion')">
+                            + Agregar
+                        </button>
+                    </div>
+                    <div id="cc-devolucion-tags" class="d-flex flex-wrap gap-1"></div>
+                </div>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-danger" id="btn-confirmar-dev"
                         onclick="confirmarDevolucion()">↩️ Confirmar Devolución</button>
@@ -594,6 +630,137 @@
         </div>
     </div>
 </div>
+
+<script>
+// ============================================================
+// SELECTOR DE DESTINATARIOS CC PARA NOTIFICACIONES
+// ============================================================
+
+// Estado: listas de correos seleccionados por modal
+const _ccListas = { entrega: [], devolucion: [] };
+
+// Inicializar buscador CC para un modal dado
+function ccInicializar(modal) {
+    const input = document.getElementById(`cc-${modal}-input`);
+    const lista = document.getElementById(`cc-${modal}-sugerencias`);
+    if (!input || !lista) return;
+
+    input.addEventListener('input', async function() {
+        const q = this.value.trim();
+        lista.innerHTML = '';
+        lista.style.display = 'none';
+        if (q.length < 2) return;
+
+        // Primero buscar en base de datos
+        try {
+            const res  = await fetch(`/api/notificaciones/destinatarios?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+
+            if (data.length > 0) {
+                lista.style.display = 'block';
+                data.forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item list-group-item-action py-2';
+                    li.style.cursor = 'pointer';
+                    li.innerHTML = `
+                        <div style="font-size:13px;font-weight:600;">${p.nombre_completo}</div>
+                        <div style="font-size:11px;color:#6b7280;">${p.mail} · ${p.cargo || ''}</div>`;
+                    li.onclick = () => ccAgregar(modal, p.mail, p.nombre_completo);
+                    lista.appendChild(li);
+                });
+            }
+        } catch(e) {
+            console.error('Error buscando destinatarios:', e);
+        }
+    });
+
+    // Cerrar lista al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !lista.contains(e.target)) {
+            lista.style.display = 'none';
+        }
+    }, true);
+}
+
+// Agregar un correo a la lista (desde búsqueda o manual)
+function ccAgregar(modal, email, nombre) {
+    email = (email || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    if (_ccListas[modal].includes(email)) return; // ya existe
+
+    _ccListas[modal].push(email);
+    _ccRenderTags(modal);
+
+    // Limpiar input y lista
+    const input = document.getElementById(`cc-${modal}-input`);
+    const lista = document.getElementById(`cc-${modal}-sugerencias`);
+    if (input) input.value = '';
+    if (lista) lista.style.display = 'none';
+}
+
+// Agregar correo manual (desde botón +)
+function ccAgregarManual(modal) {
+    const input = document.getElementById(`cc-${modal}-input`);
+    if (!input) return;
+    const val = input.value.trim();
+    if (val.includes('@')) {
+        ccAgregar(modal, val, val);
+    } else {
+        input.focus();
+        input.classList.add('is-invalid');
+        setTimeout(() => input.classList.remove('is-invalid'), 1500);
+    }
+}
+
+// Eliminar un correo de la lista
+function ccEliminar(modal, email) {
+    _ccListas[modal] = _ccListas[modal].filter(e => e !== email);
+    _ccRenderTags(modal);
+}
+
+// Renderizar los tags visuales
+function _ccRenderTags(modal) {
+    const container = document.getElementById(`cc-${modal}-tags`);
+    if (!container) return;
+    container.innerHTML = _ccListas[modal].map(email => `
+        <span class="badge bg-light text-dark border d-flex align-items-center gap-1"
+              style="font-size:11px; padding:5px 8px;">
+            📧 ${email}
+            <button type="button" onclick="ccEliminar('${modal}','${email}')"
+                    style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;line-height:1;color:#6b7280;">✕</button>
+        </span>`).join('');
+}
+
+// Obtener lista CC para enviar con el movimiento
+function ccObtener(modal) {
+    return [..._ccListas[modal]];
+}
+
+// Limpiar al cerrar modales
+function ccLimpiar(modal) {
+    _ccListas[modal] = [];
+    _ccRenderTags(modal);
+    const input = document.getElementById(`cc-${modal}-input`);
+    if (input) input.value = '';
+}
+
+// ── INICIALIZACIÓN ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    ccInicializar('entrega');
+    ccInicializar('devolucion');
+
+    // Limpiar CC al cerrar modales
+    document.getElementById('modalEntrega')
+        ?.addEventListener('hidden.bs.modal', () => ccLimpiar('entrega'));
+    document.getElementById('modalDevolucion')
+        ?.addEventListener('hidden.bs.modal', () => ccLimpiar('devolucion'));
+});
+
+// Exponer al scope global para uso desde main.js
+window.ccObtener   = ccObtener;
+window.ccAgregarManual = ccAgregarManual;
+window.ccEliminar  = ccEliminar;
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     

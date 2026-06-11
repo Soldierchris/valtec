@@ -146,6 +146,7 @@ export async function confirmarDevolucion() {
         rut_colaborador: document.getElementById('rut-colab-dev').value,
         ubicacion:       document.getElementById('bodega-dev').value,
         observacion:     document.getElementById('observacion-dev').value,
+        cc:              typeof window.ccObtener === 'function' ? window.ccObtener('devolucion') : [],
         serie: (categoria === 'Seguridad' || categoria === 'Tablet')
             ? document.getElementById('serie-dev').value.trim()
             : null,

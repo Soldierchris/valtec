@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../database/db');
+const path = require('path');
+const { notificarEntrega, notificarDevolucion } = require(path.resolve(__dirname, '../../../emailService'));
 
 // --- RUTA 1: INGRESO GENERAL (POST /) ---
 router.post('/', async (req, res) => {
@@ -86,6 +88,42 @@ router.post('/entrega', async (req, res) => {
         );
 
         await connection.commit();
+
+        // ── CORREO (no bloqueante — si falla, el movimiento ya está guardado) ──
+        // Obtener datos completos del colaborador y producto para el correo
+        try {
+            const [[colaborador]] = await pool.execute(
+                `SELECT CONCAT(nombre1, ' ', COALESCE(nombre2,''), ' ', apellido1, ' ', COALESCE(apellido2,'')) AS nombre_completo,
+                        sector, mail
+                 FROM colaborador WHERE rut = ?`,
+                [rut_colaborador]
+            );
+            const [[producto]] = await pool.execute(
+                `SELECT descripcion FROM producto WHERE id_articulo = ?`,
+                [id_articulo]
+            );
+
+            // cc viene del body como array de strings (emails)
+            const cc = Array.isArray(req.body.cc) ? req.body.cc : [];
+            // Si el colaborador tiene mail y no está ya en cc, añadirlo
+            if (colaborador?.mail && !cc.includes(colaborador.mail)) {
+                cc.push(colaborador.mail);
+            }
+
+            notificarEntrega({
+                descripcion: producto?.descripcion || `Artículo #${id_articulo}`,
+                codigo:      serie || String(id_articulo),
+                custodio:    colaborador?.nombre_completo?.replace(/\s+/g, ' ').trim() || rut_colaborador,
+                rut:         rut_colaborador,
+                sector:      colaborador?.sector,
+                ubicacion,
+                cantidad,
+                cc,
+            }); // Sin await — fire and forget
+        } catch (emailErr) {
+            console.error('[Entrega] Error preparando correo:', emailErr.message);
+        }
+
         res.status(201).json({ message: "Entrega registrada exitosamente" });
 
     } catch (error) {
@@ -109,6 +147,38 @@ router.post('/devolucion', async (req, res) => {
              VALUES (?, 'Devolución', 1, ?, ?, ?, ?, NOW())`,
             [id_articulo, ubicacion, serie || null, rut_colaborador, observacion || null]
         );
+
+        // ── CORREO (no bloqueante) ──────────────────────────────────────
+        try {
+            const [[colaborador]] = await pool.execute(
+                `SELECT CONCAT(nombre1, ' ', COALESCE(nombre2,''), ' ', apellido1, ' ', COALESCE(apellido2,'')) AS nombre_completo,
+                        mail
+                 FROM colaborador WHERE rut = ?`,
+                [rut_colaborador]
+            );
+            const [[producto]] = await pool.execute(
+                `SELECT descripcion FROM producto WHERE id_articulo = ?`,
+                [id_articulo]
+            );
+
+            const cc = Array.isArray(req.body.cc) ? req.body.cc : [];
+            if (colaborador?.mail && !cc.includes(colaborador.mail)) {
+                cc.push(colaborador.mail);
+            }
+
+            notificarDevolucion({
+                descripcion: producto?.descripcion || `Artículo #${id_articulo}`,
+                codigo:      serie || String(id_articulo),
+                custodio:    colaborador?.nombre_completo?.replace(/\s+/g, ' ').trim() || rut_colaborador,
+                rut:         rut_colaborador,
+                ubicacion,
+                observacion,
+                cc,
+            });
+        } catch (emailErr) {
+            console.error('[Devolución] Error preparando correo:', emailErr.message);
+        }
+
         res.status(201).json({ message: "Devolución registrada exitosamente" });
     } catch (error) {
         console.error("Error en devolución:", error);
@@ -134,7 +204,7 @@ router.get('/bodega-seguridad', async (req, res) => {
             INNER JOIN movimiento m ON p.id_articulo = m.id_articulo
             WHERE m.ubicacion = 'Bodega Seguridad'
             GROUP BY p.id_articulo, p.descripcion, ds.num_serie, ds.modelo
-            ORDER BY p.id_articulo
+            ORDER BY p.descripcion
         `);
         res.json(rows);
     } catch (error) {
@@ -191,7 +261,7 @@ router.get('/bodega-grande', async (req, res) => {
             WHERE m.ubicacion = 'Bodega Grande'
             GROUP BY p.id_articulo, p.descripcion, p.categoria, ds.num_serie, ds.modelo
             HAVING stock_disponible > 0
-            ORDER BY p.categoria, p.id_articulo
+            ORDER BY p.descripcion
         `);
         res.json(rows);
     } catch (error) {
@@ -212,9 +282,11 @@ router.get('/custodia/:rut', async (req, res) => {
                 m.modelo,
                 m.fecha_movimiento,
                 DATEDIFF(NOW(), m.fecha_movimiento) AS dias_en_custodia,
-                m.ubicacion
+                m.ubicacion,
+                c.sector
             FROM movimiento m
             JOIN producto p ON m.id_articulo = p.id_articulo
+            LEFT JOIN colaborador c ON m.rut_colaborador = c.rut
             WHERE m.tipo_movimiento = 'Entrega'
               AND m.rut_colaborador = ?
               AND (
