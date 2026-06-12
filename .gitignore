@@ -6,3 +6,4 @@ promp.txt
 prom.txt
 dump-final.sql
 dump-limpio.sql
+.env.development
