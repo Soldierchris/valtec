@@ -17,15 +17,15 @@ const nodemailer = require('nodemailer');
 // Para Gmail usa smtp.gmail.com:587
 // Para otro hosting revisa el panel de tu dominio.
 const transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST   || 'smtp.office365.com',
+    host:   process.env.SMTP_HOST,
     port:   parseInt(process.env.SMTP_PORT || '587'),
     secure: false, // STARTTLS
     auth: {
         user: process.env.SMTP_USER || 'sistema@logisticavaltec.cl',
-        pass: process.env.SMTP_PASS || '',
+        pass: process.env.SMTP_PASS || 'Puente.15L.',
     },
     tls: {
-        cipherSuites: 'SSLv3',
+        //cipherSuites: 'SSLv3',
         rejectUnauthorized: false,
     },
 });
