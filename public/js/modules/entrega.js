@@ -1,5 +1,5 @@
 // ============================================================
-// public/js/modules/entrega.js
+// public/js/modules/entrega.js NEW
 // Lógica del modal "Registrar Entrega"
 // ============================================================
 

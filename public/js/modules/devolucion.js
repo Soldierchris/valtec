@@ -1,5 +1,5 @@
 // ============================================================
-// public/js/modules/devolucion.js
+// public/js/modules/devolucion.js NEW
 // Lógica del modal "Registrar Devolución"
 // ============================================================
 
