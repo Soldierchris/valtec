@@ -1,9 +1,9 @@
 node_modules/
 .env
+.env.development
 .env.local
 *.log
 promp.txt
 prom.txt
 dump-final.sql
 dump-limpio.sql
-.env.development
