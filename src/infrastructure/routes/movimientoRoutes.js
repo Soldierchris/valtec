@@ -53,7 +53,6 @@ router.post('/ingreso', async (req, res) => {
 });
 
 // --- RUTA 3: ENTREGA A COLABORADOR ---
-// --- RUTA 3: ENTREGA A COLABORADOR ---
 router.post('/entrega', async (req, res) => {
     const { id_articulo, cantidad, ubicacion, rut_colaborador, id_usuario_bodega, serie, modelo } = req.body;
     const connection = await pool.getConnection();
@@ -79,7 +78,7 @@ router.post('/entrega', async (req, res) => {
         if (rows.length === 0) throw new Error("El producto no existe.");
         if (rows[0].stock_actual < cantidad) throw new Error(`Stock insuficiente. Disponible: ${rows[0].stock_actual}`);
 
-        // 2. REGISTRO DEL MOVIMIENTO — ahora incluye serie y modelo
+        // 2. REGISTRO DEL MOVIMIENTO
         await connection.execute(
             `INSERT INTO movimiento 
                 (id_articulo, tipo_movimiento, cantidad, ubicacion, rut_colaborador, id_usuario, serie, modelo, fecha_movimiento)
@@ -90,7 +89,6 @@ router.post('/entrega', async (req, res) => {
         await connection.commit();
 
         // ── CORREO (no bloqueante — si falla, el movimiento ya está guardado) ──
-        // Obtener datos completos del colaborador y producto para el correo
         try {
             const [[colaborador]] = await pool.execute(
                 `SELECT CONCAT(nombre1, ' ', COALESCE(nombre2,''), ' ', apellido1, ' ', COALESCE(apellido2,'')) AS nombre_completo,
@@ -103,22 +101,20 @@ router.post('/entrega', async (req, res) => {
                 [id_articulo]
             );
 
-            // cc viene del body como array de strings (emails)
+            // mailColaborador va en "to", cc solo para cuentas adicionales
+            const mailColaborador = colaborador?.mail || null;
             const cc = Array.isArray(req.body.cc) ? req.body.cc : [];
-            // Si el colaborador tiene mail y no está ya en cc, añadirlo
-            if (colaborador?.mail && !cc.includes(colaborador.mail)) {
-                cc.push(colaborador.mail);
-            }
 
             notificarEntrega({
-                descripcion: producto?.descripcion || `Artículo #${id_articulo}`,
-                codigo:      serie || String(id_articulo),
-                custodio:    colaborador?.nombre_completo?.replace(/\s+/g, ' ').trim() || rut_colaborador,
-                rut:         rut_colaborador,
-                sector:      colaborador?.sector,
+                descripcion:      producto?.descripcion || `Artículo #${id_articulo}`,
+                codigo:           serie || String(id_articulo),
+                custodio:         colaborador?.nombre_completo?.replace(/\s+/g, ' ').trim() || rut_colaborador,
+                rut:              rut_colaborador,
+                sector:           colaborador?.sector,
                 ubicacion,
                 cantidad,
-                cc,
+                mailColaborador,  // → to
+                cc,               // → cc (+ cuenta sistema se agrega en emailService)
             }); // Sin await — fire and forget
         } catch (emailErr) {
             console.error('[Entrega] Error preparando correo:', emailErr.message);
@@ -148,7 +144,7 @@ router.post('/devolucion', async (req, res) => {
             [id_articulo, ubicacion, serie || null, rut_colaborador, observacion || null]
         );
 
-        // ── CORREO (no bloqueante) ──────────────────────────────────────
+        // ── CORREO (no bloqueante) ──
         try {
             const [[colaborador]] = await pool.execute(
                 `SELECT CONCAT(nombre1, ' ', COALESCE(nombre2,''), ' ', apellido1, ' ', COALESCE(apellido2,'')) AS nombre_completo,
@@ -161,19 +157,19 @@ router.post('/devolucion', async (req, res) => {
                 [id_articulo]
             );
 
+            // mailColaborador va en "to", cc solo para cuentas adicionales
+            const mailColaborador = colaborador?.mail || null;
             const cc = Array.isArray(req.body.cc) ? req.body.cc : [];
-            if (colaborador?.mail && !cc.includes(colaborador.mail)) {
-                cc.push(colaborador.mail);
-            }
 
             notificarDevolucion({
-                descripcion: producto?.descripcion || `Artículo #${id_articulo}`,
-                codigo:      serie || String(id_articulo),
-                custodio:    colaborador?.nombre_completo?.replace(/\s+/g, ' ').trim() || rut_colaborador,
-                rut:         rut_colaborador,
+                descripcion:      producto?.descripcion || `Artículo #${id_articulo}`,
+                codigo:           serie || String(id_articulo),
+                custodio:         colaborador?.nombre_completo?.replace(/\s+/g, ' ').trim() || rut_colaborador,
+                rut:              rut_colaborador,
                 ubicacion,
                 observacion,
-                cc,
+                mailColaborador,  // → to
+                cc,               // → cc (+ cuenta sistema se agrega en emailService)
             });
         } catch (emailErr) {
             console.error('[Devolución] Error preparando correo:', emailErr.message);
@@ -241,6 +237,7 @@ router.get('/trazabilidad/:serie', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 // --- RUTA: INVENTARIO BODEGA GRANDE ---
 router.get('/bodega-grande', async (req, res) => {
     try {
@@ -290,7 +287,6 @@ router.get('/custodia/:rut', async (req, res) => {
             WHERE m.tipo_movimiento = 'Entrega'
               AND m.rut_colaborador = ?
               AND (
-                  -- Activos con serie: no existe devolución posterior
                   (m.serie IS NOT NULL AND NOT EXISTS (
                       SELECT 1 FROM movimiento m2
                       WHERE m2.serie = m.serie
@@ -298,7 +294,6 @@ router.get('/custodia/:rut', async (req, res) => {
                         AND m2.fecha_movimiento > m.fecha_movimiento
                   ))
                   OR
-                  -- Activos sin serie: balance positivo de entregas vs devoluciones
                   (m.serie IS NULL AND (
                       SELECT 
                           COALESCE(SUM(CASE WHEN m3.tipo_movimiento = 'Entrega' THEN m3.cantidad ELSE 0 END), 0) -
