@@ -1,7 +1,7 @@
 // ============================================================
 // emailService.js
 // Servicio centralizado de envío de correos para VALTEC.
-// Usa nodemailer con SMTP (Outlook / Office 365).
+// Usa nodemailer con SMTP (Resend).
 //
 // IMPORTANTE: Este servicio es NO BLOQUEANTE.
 // Si el correo falla, el movimiento ya quedó grabado en DB.
@@ -12,21 +12,13 @@ require('dotenv').config();
 const nodemailer = require('nodemailer');
 
 // ── CONFIGURACIÓN SMTP ────────────────────────────────────────
-// Ajusta host/port según tu proveedor de dominio.
-// Para Outlook/Office 365 usa smtp.office365.com:587
-// Para Gmail usa smtp.gmail.com:587
-// Para otro hosting revisa el panel de tu dominio.
 const transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST   || 'smtp.office365.com',
-    port:   parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // STARTTLS
+    host:   process.env.SMTP_HOST,
+    port:   parseInt(process.env.SMTP_PORT || '465'),
+    secure: true,
     auth: {
-        user: process.env.SMTP_USER || 'sistema@logisticavaltec.cl',
-        pass: process.env.SMTP_PASS || '',
-    },
-    tls: {
-        cipherSuites: 'SSLv3',
-        rejectUnauthorized: false,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
     },
 });
 
@@ -109,14 +101,18 @@ function htmlBase({ titulo, color, icono, filas, nota }) {
 }
 
 // ── ENVIAR CORREO (función interna) ───────────────────────────
-async function enviar({ asunto, html, cc = [] }) {
-    const from = `"VALTEC Logística" <${process.env.SMTP_USER || 'sistema@logisticavaltec.cl'}>`;
-    const to   = process.env.SMTP_USER || 'sistema@logisticavaltec.cl'; // copia en la cuenta origen
+async function enviar({ asunto, html, to, cc = [] }) {
+    const from  = `"VALTEC Logística" <${process.env.SMTP_FROM || 'sistema@mail.logisticavaltec.cl'}>`;
+    //const copia = process.env.SMTP_FROM || 'sistema@mail.logisticavaltec.cl';
+    const copia = 'sistema@logisticavaltec.cl';
+
+    // Si el colaborador no tiene mail, la cuenta sistema actúa como destinatario
+    const destino = to || copia;
 
     const mailOptions = {
         from,
-        to,
-        cc: cc.filter(Boolean).join(', ') || undefined,
+        to: destino,
+        cc: [...cc, copia].filter(Boolean).join(', ') || undefined,
         subject: asunto,
         html,
     };
@@ -137,32 +133,33 @@ async function enviar({ asunto, html, cc = [] }) {
 /**
  * Notificación de ENTREGA a colaborador.
  * @param {Object} datos
- * @param {string} datos.descripcion   - Nombre del implemento
- * @param {string} datos.codigo        - N° de serie o ID artículo
- * @param {string} datos.custodio      - Nombre completo del colaborador
- * @param {string} datos.rut           - RUT del colaborador
- * @param {string} [datos.sector]      - Sector/área del colaborador
- * @param {string} [datos.ubicacion]   - Bodega de origen
- * @param {number} [datos.cantidad]    - Cantidad entregada
- * @param {string[]} [datos.cc]        - Correos en copia
+ * @param {string} datos.descripcion      - Nombre del implemento
+ * @param {string} datos.codigo           - N° de serie o ID artículo
+ * @param {string} datos.custodio         - Nombre completo del colaborador
+ * @param {string} datos.rut              - RUT del colaborador
+ * @param {string} [datos.sector]         - Sector/área del colaborador
+ * @param {string} [datos.ubicacion]      - Bodega de origen
+ * @param {number} [datos.cantidad]       - Cantidad entregada
+ * @param {string} [datos.mailColaborador] - Correo del colaborador (to)
+ * @param {string[]} [datos.cc]           - Correos adicionales en copia
  */
 async function notificarEntrega(datos) {
     const fecha = fechaChilena();
     const filas = [
-        ['📦 Implemento',  datos.descripcion],
+        ['📦 Implemento',     datos.descripcion],
         ['🔖 Código / Serie', datos.codigo || datos.id_articulo],
-        ['👤 Custodio',    datos.custodio],
-        ['🪪 RUT',         datos.rut],
-        ['🏢 Sector',      datos.sector || null],
-        ['📍 Bodega Origen', datos.ubicacion || null],
-        ['🔢 Cantidad',    datos.cantidad ? String(datos.cantidad) : null],
-        ['📅 Fecha',       fecha],
-    ].filter(([, v]) => v); // omitir filas vacías
+        ['👤 Custodio',       datos.custodio],
+        ['🪪 RUT',            datos.rut],
+        ['🏢 Sector',         datos.sector || null],
+        ['📍 Bodega Origen',  datos.ubicacion || null],
+        ['🔢 Cantidad',       datos.cantidad ? String(datos.cantidad) : null],
+        ['📅 Fecha',          fecha],
+    ].filter(([, v]) => v);
 
     const html = htmlBase({
-        titulo:  'Asignación de Custodia',
-        color:   '#2563eb',
-        icono:   '📤',
+        titulo: 'Asignación de Custodia',
+        color:  '#2563eb',
+        icono:  '📤',
         filas,
         nota: '⚠️ Si existe alguna novedad con esta asignación, por favor infórmenos a la brevedad.',
     });
@@ -170,23 +167,33 @@ async function notificarEntrega(datos) {
     return enviar({
         asunto: `[VALTEC] Entrega registrada — ${datos.descripcion}`,
         html,
-        cc: datos.cc || [],
+        to:  datos.mailColaborador || null,
+        cc:  datos.cc || [],
     });
 }
 
 /**
  * Notificación de DEVOLUCIÓN a bodega.
+ * @param {Object} datos
+ * @param {string} datos.descripcion       - Nombre del implemento
+ * @param {string} datos.codigo            - N° de serie o ID artículo
+ * @param {string} datos.custodio          - Nombre completo del colaborador
+ * @param {string} datos.rut               - RUT del colaborador
+ * @param {string} [datos.ubicacion]       - Bodega destino
+ * @param {string} [datos.observacion]     - Observación del movimiento
+ * @param {string} [datos.mailColaborador] - Correo del colaborador (to)
+ * @param {string[]} [datos.cc]            - Correos adicionales en copia
  */
 async function notificarDevolucion(datos) {
     const fecha = fechaChilena();
     const filas = [
-        ['📦 Implemento',   datos.descripcion],
+        ['📦 Implemento',     datos.descripcion],
         ['🔖 Código / Serie', datos.codigo || datos.id_articulo],
-        ['👤 Devuelto por', datos.custodio],
-        ['🪪 RUT',          datos.rut],
+        ['👤 Devuelto por',   datos.custodio],
+        ['🪪 RUT',            datos.rut],
         ['📍 Bodega Destino', datos.ubicacion || null],
-        ['📅 Fecha',        fecha],
-        ['💬 Observación',  datos.observacion || null],
+        ['📅 Fecha',          fecha],
+        ['💬 Observación',    datos.observacion || null],
     ].filter(([, v]) => v);
 
     const html = htmlBase({
@@ -202,7 +209,8 @@ async function notificarDevolucion(datos) {
     return enviar({
         asunto: `[VALTEC] Devolución registrada — ${datos.descripcion}`,
         html,
-        cc: datos.cc || [],
+        to:  datos.mailColaborador || null,
+        cc:  datos.cc || [],
     });
 }
 
