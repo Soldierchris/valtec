@@ -4,7 +4,8 @@
 
 🔗 **Demo en vivo:** [logisticavaltec.cl](https://logisticavaltec.cl/login.html)  
 📦 **Estado:** Producción activa con usuarios reales  
-🗓️ **Desde:** 2024
+🗓️ **Desde:** 2024  
+📩 **Demo disponible bajo solicitud** — contactar por [LinkedIn](https://linkedin.com/in/castrodevit)
 
 ---
 
@@ -86,7 +87,7 @@ colaborador ── custodia de activos serializados
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tu-usuario/valtec.git
+git clone https://github.com/Soldierchris/valtec.git
 cd valtec
 
 # Instalar dependencias
