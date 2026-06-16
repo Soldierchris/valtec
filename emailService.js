@@ -99,11 +99,10 @@ function htmlBase({ titulo, color, icono, filas, nota }) {
 </body>
 </html>`;
 }
-
+/** // Funcion para dev
 // ── ENVIAR CORREO (función interna) ───────────────────────────
 async function enviar({ asunto, html, to, cc = [] }) {
     const from  = `"VALTEC Logística" <${process.env.SMTP_FROM || 'sistema@mail.logisticavaltec.cl'}>`;
-    //const copia = process.env.SMTP_FROM || 'sistema@mail.logisticavaltec.cl';
     const copia = 'sistema@logisticavaltec.cl';
 
     // Si el colaborador no tiene mail, la cuenta sistema actúa como destinatario
@@ -126,7 +125,42 @@ async function enviar({ asunto, html, to, cc = [] }) {
         console.error('[EMAIL] Error al enviar:', err.message);
         return { ok: false, error: err.message };
     }
+}*/
+
+// emailService.js — reemplazar la sección de transporter y la función enviar()
+
+const { Resend } = require('resend'); // npm install resend
+
+const resend = new Resend(process.env.SMTP_PASS); // la API key que ya tienes
+
+async function enviar({ asunto, html, to, cc = [] }) {
+    const from  = `VALTEC Logística <${process.env.SMTP_FROM}>`;
+    const copia = 'sistema@logisticavaltec.cl';
+    const destino = to || copia;
+
+    try {
+        const { error } = await resend.emails.send({
+            from,
+            to:      [destino],
+            cc:      [...cc, copia].filter(Boolean),
+            subject: asunto,
+            html,
+        });
+
+        if (error) {
+            console.error('[EMAIL] Error Resend:', error);
+            return { ok: false, error: error.message };
+        }
+
+        console.log('[EMAIL] Enviado OK via Resend API');
+        return { ok: true };
+    } catch (err) {
+        console.error('[EMAIL] Error al enviar:', err.message);
+        return { ok: false, error: err.message };
+    }
 }
+
+
 
 // ── API PÚBLICA ───────────────────────────────────────────────
 
