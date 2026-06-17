@@ -89,9 +89,12 @@
                     Devolución</button>
                 <button class="btn btn-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalTrazabilidad">🔍 Custodia de
                     Activo</button>
-                <button class="btn btn-outline-info w-100 mb-2" onclick="cargarVistaTrazabilidad()">📋 Trazabilidad</button>
-                <button class="btn btn-outline-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalCustodia">👤 Custodio
-                    por RUT</button>
+                    <button class="btn btn-outline-info w-100 mb-2" onclick="cargarVistaTrazabilidad()">📋 Trazabilidad</button>
+                    <button class="btn btn-outline-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalCustodia">👤 Custodio
+                        por RUT</button>
+                    <button class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalUniformesPendientes">
+                        📦 Pendientes
+                    </button>
                 </div>
 
             <main class="col-md-10 p-4">
@@ -765,6 +768,28 @@ window.ccEliminar  = ccEliminar;
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script type="module" src="js/main.js"></script>
+
+    <!-- MODAL UNIFORMES PENDIENTES -->
+<div class="modal fade" id="modalUniformesPendientes" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">📦 Uniformes y Artículos Pendientes de Retiro — Bodega Central</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="uniformes-contenedor">
+                    <div class="text-center text-muted py-4">
+                        <div class="spinner-border spinner-border-sm me-2"></div>Cargando...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 
 </html>

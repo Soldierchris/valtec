@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../database/db');
 const path = require('path');
+
+// Una sola línea — importa ambas funciones del emailService
 const { notificarEntrega, notificarDevolucion } = require(path.resolve(__dirname, '../../../emailService'));
 
 // --- RUTA 1: INGRESO GENERAL (POST /) ---
@@ -60,7 +62,6 @@ router.post('/entrega', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. VALIDACIÓN DE STOCK
         const [rows] = await connection.execute(
             `SELECT 
                 p.id_articulo,
@@ -78,7 +79,6 @@ router.post('/entrega', async (req, res) => {
         if (rows.length === 0) throw new Error("El producto no existe.");
         if (rows[0].stock_actual < cantidad) throw new Error(`Stock insuficiente. Disponible: ${rows[0].stock_actual}`);
 
-        // 2. REGISTRO DEL MOVIMIENTO
         await connection.execute(
             `INSERT INTO movimiento 
                 (id_articulo, tipo_movimiento, cantidad, ubicacion, rut_colaborador, id_usuario, serie, modelo, fecha_movimiento)
@@ -88,7 +88,6 @@ router.post('/entrega', async (req, res) => {
 
         await connection.commit();
 
-        // ── CORREO (no bloqueante — si falla, el movimiento ya está guardado) ──
         try {
             const [[colaborador]] = await pool.execute(
                 `SELECT CONCAT(nombre1, ' ', COALESCE(nombre2,''), ' ', apellido1, ' ', COALESCE(apellido2,'')) AS nombre_completo,
@@ -101,7 +100,6 @@ router.post('/entrega', async (req, res) => {
                 [id_articulo]
             );
 
-            // mailColaborador va en "to", cc solo para cuentas adicionales
             const mailColaborador = colaborador?.mail || null;
             const cc = Array.isArray(req.body.cc) ? req.body.cc : [];
 
@@ -113,9 +111,9 @@ router.post('/entrega', async (req, res) => {
                 sector:           colaborador?.sector,
                 ubicacion,
                 cantidad,
-                mailColaborador,  // → to
-                cc,               // → cc (+ cuenta sistema se agrega en emailService)
-            }); // Sin await — fire and forget
+                mailColaborador,
+                cc,
+            });
         } catch (emailErr) {
             console.error('[Entrega] Error preparando correo:', emailErr.message);
         }
@@ -144,7 +142,6 @@ router.post('/devolucion', async (req, res) => {
             [id_articulo, ubicacion, serie || null, rut_colaborador, observacion || null]
         );
 
-        // ── CORREO (no bloqueante) ──
         try {
             const [[colaborador]] = await pool.execute(
                 `SELECT CONCAT(nombre1, ' ', COALESCE(nombre2,''), ' ', apellido1, ' ', COALESCE(apellido2,'')) AS nombre_completo,
@@ -157,7 +154,6 @@ router.post('/devolucion', async (req, res) => {
                 [id_articulo]
             );
 
-            // mailColaborador va en "to", cc solo para cuentas adicionales
             const mailColaborador = colaborador?.mail || null;
             const cc = Array.isArray(req.body.cc) ? req.body.cc : [];
 
@@ -168,8 +164,8 @@ router.post('/devolucion', async (req, res) => {
                 rut:              rut_colaborador,
                 ubicacion,
                 observacion,
-                mailColaborador,  // → to
-                cc,               // → cc (+ cuenta sistema se agrega en emailService)
+                mailColaborador,
+                cc,
             });
         } catch (emailErr) {
             console.error('[Devolución] Error preparando correo:', emailErr.message);

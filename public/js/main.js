@@ -57,7 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset modal custodia al cerrar
     document.getElementById('modalCustodia')
+    
         ?.addEventListener('hidden.bs.modal', resetModalCustodia);
+    // ── NUEVO: Uniformes pendientes ──────────────────────────
+    document.getElementById('modalUniformesPendientes')
+        ?.addEventListener('show.bs.modal', () => {
+            import('./modules/uniformes.js').then(m => m.initUniformes());
+        });
 
     // Cerrar listas de autocompletado al hacer clic fuera
     document.addEventListener('click', _cerrarListas, true);
