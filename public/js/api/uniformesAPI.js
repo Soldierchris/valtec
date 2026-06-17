@@ -2,7 +2,7 @@
 // Patrón idéntico a movimientos.api.js, colaboradores.api.js, etc.
 // http.js exporta fetchJSON — no un objeto {get, post}
 
-import { fetchJSON } from '../http.js';
+import { fetchJSON } from './http.js';
 
 const BASE = '/api/uniformes-pendientes';
 

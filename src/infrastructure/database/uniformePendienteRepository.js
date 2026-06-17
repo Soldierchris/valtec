@@ -13,12 +13,11 @@ async function listarPendientes() {
         SELECT
             up.id,
             up.colaborador_rut,
-            TRIM(CONCAT(
-                c.nombre1, ' ',
-                COALESCE(NULLIF(c.nombre2,  ''), ''), ' ',
-                c.apellido1, ' ',
-                COALESCE(NULLIF(c.apellido2,''), '')
-            )) AS nombre_completo,
+          TRIM(CONCAT(
+    c.nombre1, ' ',
+    c.apellido1, ' ',
+    COALESCE(NULLIF(c.apellido2,''), '')
+)) AS nombre_completo,
             c.sector,
             c.mail,
             up.descripcion,

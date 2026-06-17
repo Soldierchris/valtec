@@ -117,7 +117,7 @@ window.confirmarEntrega = confirmarEntrega;
 window.verificarSerieDevolucion = verificarSerieDevolucion;
 window.confirmarDevolucion      = confirmarDevolucion;
 
-// Colaborador
+// Guardar Colaborador
 window.guardarColaborador = async function () {
     const datos = {
         rut:       document.getElementById('rut').value,
@@ -141,7 +141,7 @@ window.guardarColaborador = async function () {
     }
 };
 
-// Producto
+// Guardar Producto
 window.guardarProducto = async function () {
     const descripcion = document.getElementById('prod-descripcion').value.trim();
     const categoria   = document.getElementById('prod-categoria').value;

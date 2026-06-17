@@ -6,6 +6,7 @@ const path = require('path');
 // Una sola línea — importa ambas funciones del emailService
 const { notificarEntrega, notificarDevolucion } = require(path.resolve(__dirname, '../../../emailService'));
 
+
 // --- RUTA 1: INGRESO GENERAL (POST /) ---
 router.post('/', async (req, res) => {
     const { id_articulo, tipo_movimiento, cantidad, ubicacion, serie, modelo, aerolinea } = req.body;

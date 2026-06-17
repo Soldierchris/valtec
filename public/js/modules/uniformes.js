@@ -47,7 +47,7 @@ async function renderTabla() {
                    <table class="table table-hover table-sm align-middle">
                        <thead class="table-dark">
                            <tr>
-                               <th>Fecha ingreso</th>
+                               <th>Ingreso</th>
                                <th>RUT</th>
                                <th>Nombre</th>
                                <th>Sector</th>
@@ -95,6 +95,7 @@ function filaHTML(p) {
 }
 
 // ── Eventos ───────────────────────────────────────────────────
+/*
 function bindEvents() {
     const contenedor = document.getElementById('uniformes-contenedor');
     if (!contenedor) return;
@@ -104,6 +105,21 @@ function bindEvents() {
         if (e.target.closest('.btn-notificar'))     handleNotificar(e.target.closest('.btn-notificar'));
         if (e.target.closest('.btn-cerrar'))        handleCerrar(e.target.closest('.btn-cerrar'));
     });
+}*/
+function bindEvents() {
+    const contenedor = document.getElementById('uniformes-contenedor');
+    
+    // 🛡️ Si el contenedor no existe o ya tiene los eventos vinculados, salimos.
+    if (!contenedor || contenedor.dataset.eventsBound) return;
+
+    contenedor.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-add-uniforme'))  abrirModalAdd();
+        if (e.target.closest('.btn-notificar'))     handleNotificar(e.target.closest('.btn-notificar'));
+        if (e.target.closest('.btn-cerrar'))        handleCerrar(e.target.closest('.btn-cerrar'));
+    });
+
+    // 🏷️ Marcamos el contenedor para saber que ya está protegido
+    contenedor.dataset.eventsBound = "true";
 }
 
 // ── Modal Add ─────────────────────────────────────────────────
@@ -137,7 +153,8 @@ function abrirModalAdd() {
     inputRutNuevo.addEventListener('input', async function () {
         const q = this.value.trim();
         colaboradorSelec = null;
-        btnGuardar.disabled = true;
+        //btnGuardar.disabled = true;
+        document.getElementById('btn-guardar-uniforme').disabled = true;
 
         if (q.length < 2) {
             dropdown.innerHTML = '';
@@ -162,13 +179,22 @@ function abrirModalAdd() {
                 li.style.cursor = 'pointer';
                 li.innerHTML   = `<strong>${c.rut}</strong> — ${c.nombre1} ${c.apellido1}
                                   <small class="text-muted ms-1">(${c.sector || 'Sin sector'})</small>`;
-                li.addEventListener('click', () => {
+              /*  li.addEventListener('click', () => {
                     colaboradorSelec         = c;
                     inputRutNuevo.value      = `${c.rut} — ${c.nombre1} ${c.apellido1}`;
                     dropdown.style.display   = 'none';
                     btnGuardar.disabled      = false;
                     inputDesc.focus();
+                });*/
+
+                li.addEventListener('click', () => {
+                    colaboradorSelec = c;
+                    inputRutNuevo.value = `${c.rut} — ${c.nombre1} ${c.apellido1}`;
+                    dropdown.style.display = 'none';
+                    document.getElementById('btn-guardar-uniforme').disabled = false; // ✅ Apunta al botón real en pantalla
+                    inputDesc.focus();
                 });
+
                 dropdown.appendChild(li);
             });
 
@@ -270,7 +296,7 @@ async function handleNotificar(btn) {
         await uniformesAPI.notificar(id);
         mostrarToast('✉️ Notificación enviada correctamente', 'success');
         await renderTabla();
-        bindEvents();
+        //bindEvents();
     } catch (err) {
         console.error('[uniformes] Error al notificar:', err);
         mostrarToast('❌ ' + (err.message || 'Error al enviar la notificación'), 'danger');
@@ -297,7 +323,7 @@ async function handleCerrar(btn) {
         await uniformesAPI.cerrar(id);
         mostrarToast('✔️ Registro cerrado correctamente', 'success');
         await renderTabla();
-        bindEvents();
+        //bindEvents();
     } catch (err) {
         console.error('[uniformes] Error al cerrar:', err);
         mostrarToast('❌ Error al cerrar el registro', 'danger');
