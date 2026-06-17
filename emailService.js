@@ -35,6 +35,7 @@ function fechaChilena(date = new Date()) {
 }
 
 // ── HELPER: HTML BASE DEL CORREO ─────────────────────────────
+/*
 function htmlBase({ titulo, color, icono, filas, nota }) {
     const filasHtml = filas.map(([label, valor]) => `
         <tr>
@@ -98,7 +99,77 @@ function htmlBase({ titulo, color, icono, filas, nota }) {
   </table>
 </body>
 </html>`;
+}*/
+
+function htmlBase({ titulo, color, icono, filas, nota, intro }) {
+    // 💡 Si no se envía un intro, usa el texto genérico por defecto
+    const textoIntro = intro || 'Se ha registrado el siguiente movimiento en el sistema de control de activos:';
+
+    const filasHtml = filas.map(([label, valor]) => `
+        <tr>
+            <td style="padding:10px 16px; color:#6b7280; font-size:13px; white-space:nowrap; vertical-align:top;">
+                ${label}
+            </td>
+            <td style="padding:10px 16px; color:#111827; font-size:14px; font-weight:600; word-break:break-word;">
+                ${valor || '—'}
+            </td>
+        </tr>`).join('');
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+
+        <!-- CABECERA -->
+        <tr>
+          <td style="background:${color};padding:28px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="font-size:28px;">${icono}</td>
+                <td style="padding-left:14px;">
+                  <div style="color:#ffffff;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.8;">VALTEC Logística</div>
+                  <div style="color:#ffffff;font-size:19px;font-weight:700;margin-top:4px;">${titulo}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- CUERPO -->
+        <tr>
+          <td style="padding:28px 32px 8px;">
+            <p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.6;">
+              ${textoIntro}
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border:1px solid #e5e7eb;border-radius:8px;border-collapse:collapse;">
+              ${filasHtml}
+            </table>
+            ${nota ? `<p style="margin:20px 0 0;color:#6b7280;font-size:13px;background:#f9fafb;border-left:4px solid ${color};padding:10px 14px;border-radius:4px;">${nota}</p>` : ''}
+          </td>
+        </tr>
+
+        <!-- PIE -->
+        <tr>
+          <td style="padding:24px 32px 32px;">
+            <p style="margin:0;color:#9ca3af;font-size:11px;border-top:1px solid #f3f4f6;padding-top:18px;">
+              Este correo es generado automáticamente por el sistema VALTEC Logística.<br>
+              <strong>No responda a este mensaje.</strong> — Sistema de Control de Activos
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
+
+
 /** // Funcion para dev
 // ── ENVIAR CORREO (función interna) ───────────────────────────
 async function enviar({ asunto, html, to, cc = [] }) {
@@ -248,4 +319,35 @@ async function notificarDevolucion(datos) {
     });
 }
 
-module.exports = { notificarEntrega, notificarDevolucion };
+/**
+ * Notificación de UNIFORME O ARTÍCULO PENDIENTE a colaborador.
+ */
+async function notificarUniforme(datos) {
+    const fecha = fechaChilena();
+    const filas = [
+       // ['📦 Artículo',        datos.descripcion],
+       // ['🔖 N° Registro',     datos.codigo],
+        ['👤 Colaborador',     datos.custodio], // 🔄 Cambiado a Colaborador
+        ['🪪 RUT',            datos.rut],
+        ['📍 Bodega Origen',  datos.ubicacion || 'Bodega Central'],
+        ['📅 Fecha',          fecha],
+    ].filter(([, v]) => v);
+
+    const html = htmlBase({
+        titulo: 'Artículo Pendiente de Retiro',
+        color:  '#f59e0b', // Color ámbar/naranja de advertencia logística
+        icono:  '📦',
+        filas,
+        intro:  'Estimado/a colaborador, se informa que tiene un artículo pendiente por retirar en Bodegas Valtec Puente 15 AMB.',
+        nota:   '⚠️ Por favor, acérquese a la bodega mencionada para coordinar la entrega de sus implementos.',
+    });
+
+    return enviar({
+        asunto: `[VALTEC] Artículo pendiente por retirar`,
+        html,
+        to:  datos.mailColaborador || null,
+        cc:  datos.cc || [],
+    });
+}
+
+module.exports = { notificarEntrega, notificarDevolucion,notificarUniforme };

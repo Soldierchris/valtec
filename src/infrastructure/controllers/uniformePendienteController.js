@@ -10,6 +10,7 @@ const repo = require('../database/uniformePendienteRepository');
 
 // Mismo import que usa movimientoRoutes.js
 const { notificarEntrega } = require(path.resolve(__dirname, '../../../emailService'));
+const { notificarUniforme } = require(path.resolve(__dirname, '../../../emailService'));
 
 // ── GET /api/uniformes-pendientes ─────────────────────────────
 async function listar(req, res) {
@@ -65,7 +66,7 @@ async function notificar(req, res) {
         // notificarEntrega es fire-and-forget en movimientoRoutes,
         // aquí hacemos await para saber si el correo llegó antes
         // de incrementar el contador.
-        await notificarEntrega({
+        /*await notificarEntrega({
             descripcion:       registro.descripcion || 'Artículo pendiente de retiro',
             codigo:            `Pendiente #${registro.id}`,
             custodio:          `${registro.nombre1} ${registro.apellido1}`,
@@ -79,7 +80,19 @@ async function notificar(req, res) {
             // El asunto lo controla emailService: "[VALTEC] Entrega registrada — ..."
             // Si en el futuro quieres un asunto personalizado, agrega un campo
             // "asunto" en emailService.js y lo pasas aquí.
-        });
+        });*/
+
+        await notificarUniforme({
+    descripcion:       registro.descripcion || 'Artículo pendiente de retiro',
+    codigo:            `Pendiente #${registro.id}`,
+    custodio:          `${registro.nombre1} ${registro.apellido1}`,
+    rut:               registro.colaborador_rut,
+    sector:            registro.sector   || null,
+    ubicacion:         'Bodega Central',
+    cantidad:          null,             
+    mailColaborador:   registro.mail,    
+    cc:                [],               
+});
 
         // Solo incrementamos si el correo no lanzó excepción
         await repo.incrementarNotificaciones(id);
