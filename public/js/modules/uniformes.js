@@ -94,18 +94,6 @@ function filaHTML(p) {
     `;
 }
 
-// ── Eventos ───────────────────────────────────────────────────
-/*
-function bindEvents() {
-    const contenedor = document.getElementById('uniformes-contenedor');
-    if (!contenedor) return;
-
-    contenedor.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-add-uniforme'))  abrirModalAdd();
-        if (e.target.closest('.btn-notificar'))     handleNotificar(e.target.closest('.btn-notificar'));
-        if (e.target.closest('.btn-cerrar'))        handleCerrar(e.target.closest('.btn-cerrar'));
-    });
-}*/
 function bindEvents() {
     const contenedor = document.getElementById('uniformes-contenedor');
     
