@@ -27,11 +27,11 @@ async function listarPendientes() {
         FROM uniforme_pendiente up
         JOIN colaborador c ON c.rut = up.colaborador_rut
         WHERE up.cerrado = 0
-        ORDER BY up.fecha_ingreso ASC
+        ORDER BY c.sector ASC
     `);
     return rows;
 }
-
+//ORDER BY up.fecha_ingreso ASC
 // ── Crear nuevo registro ──────────────────────────────────────
 async function crear({ colaborador_rut, descripcion }) {
     const fecha_ingreso = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
