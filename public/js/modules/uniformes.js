@@ -32,7 +32,7 @@ async function renderTabla() {
     contenedor.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0 fw-semibold text-secondary">
-                📦 Uniformes y Artículos Pendientes de Retiro — Bodega Central
+                📦 Uniformes y/0 Artículos Pendientes de Retiro — Bodega Central
             </h5>
             <button class="btn btn-primary btn-sm" id="btn-add-uniforme">
                 ➕ Add
@@ -52,7 +52,7 @@ async function renderTabla() {
                                <th>Nombre</th>
                                <th>Sector</th>
                                <th>Descripción</th>
-                               <th class="text-center">Avisoss</th>
+                               <th class="text-center">Avisos</th>
                                <th class="text-center">Días en bodega</th>
                                <th class="text-center">Acciones</th>
                            </tr>
