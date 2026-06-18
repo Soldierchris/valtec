@@ -52,7 +52,7 @@ async function renderTabla() {
                                <th>Nombre</th>
                                <th>Sector</th>
                                <th>Descripción</th>
-                               <th class="text-center">Avisos</th>
+                               <th class="text-center">Avisoss</th>
                                <th class="text-center">Días en bodega</th>
                                <th class="text-center">Acciones</th>
                            </tr>
