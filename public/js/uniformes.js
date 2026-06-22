@@ -168,6 +168,7 @@ function abrirModalAdd() {
                     dropdown.style.display   = 'none';
                     btnGuardar.disabled      = false;
                     inputDesc.focus();
+                    //document.getElementById('btn-guardar-uniforme').disabled = false;
                 });
                 dropdown.appendChild(li);
             });
