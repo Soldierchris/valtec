@@ -166,8 +166,7 @@ function abrirModalAdd() {
                     colaboradorSelec         = c;
                     inputRutNuevo.value      = `${c.rut} — ${c.nombre1} ${c.apellido1}`;
                     dropdown.style.display   = 'none';
-                    
-                    document.getElementById('btn-guardar-uniforme').disabled = false;
+                    btnGuardar.disabled      = false;
                     inputDesc.focus();
                 });
                 dropdown.appendChild(li);
