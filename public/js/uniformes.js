@@ -118,7 +118,7 @@ function abrirModalAdd() {
     // Resetear campos
     document.getElementById('uniforme-rut').value  = '';
     document.getElementById('uniforme-desc').value = '';
-    document.getElementById('btn-guardar-uniforme').disabled = true;
+    document.getElementById('btn-guardar-uniforme').disabled = false;
     document.getElementById('uniforme-autocomplete').style.display = 'none';
 
     const modal = new bootstrap.Modal(document.getElementById('modal-add-uniforme'));
@@ -166,8 +166,8 @@ function abrirModalAdd() {
                     colaboradorSelec         = c;
                     inputRutNuevo.value      = `${c.rut} — ${c.nombre1} ${c.apellido1}`;
                     dropdown.style.display   = 'none';
-                    btnGuardar.disabled      = false;
-                    //document.getElementById('btn-guardar-uniforme').disabled = false;
+                    //btnGuardar.disabled      = false;
+                    document.getElementById('btn-guardar-uniforme').disabled = false;
                     inputDesc.focus();
                 });
                 dropdown.appendChild(li);
