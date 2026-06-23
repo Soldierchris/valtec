@@ -14,6 +14,9 @@ router.get('/', controller.listar);
 // POST   /api/uniformes-pendientes           → crear registro
 router.post('/', controller.crear);
 
+// PUT    /api/uniformes-pendientes/:id       → actualizar descripción (NUEVO)
+router.put('/:id', controller.actualizar);
+
 // POST   /api/uniformes-pendientes/:id/notificar → correo + contador +1
 router.post('/:id/notificar', controller.notificar);
 

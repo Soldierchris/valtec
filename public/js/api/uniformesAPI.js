@@ -9,6 +9,7 @@ const BASE = '/api/uniformes-pendientes';
 export const uniformesAPI = {
     listar:    ()     => fetchJSON(BASE),
     crear:     (data) => fetchJSON(BASE, 'POST', data),
+    actualizar: (id, data) => fetchJSON(`${BASE}/${id}`, 'PUT', data), // ← NUEVO
     notificar: (id)   => fetchJSON(`${BASE}/${id}/notificar`, 'POST'),
     cerrar:    (id)   => fetchJSON(`${BASE}/${id}/cerrar`,    'POST'),
 };

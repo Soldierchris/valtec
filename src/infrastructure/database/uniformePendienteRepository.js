@@ -82,10 +82,23 @@ async function obtenerPorId(id) {
     return rows[0] || null;
 }
 
+// ── Actualizar descripcion ───────────────────────────────────
+async function actualizarDescripcion(id, descripcion) {
+    const [result] = await pool.execute(
+        `UPDATE uniforme_pendiente
+         SET descripcion = ?
+         WHERE id = ? AND cerrado = 0`,
+        [descripcion, id]
+    );
+    return result.affectedRows > 0;
+}
+
+// Asegúrate de agregarlo a los exports al final del archivo:
 module.exports = {
     listarPendientes,
     crear,
     incrementarNotificaciones,
     cerrar,
-    obtenerPorId
+    obtenerPorId,
+    actualizarDescripcion // ← NUEVO
 };
