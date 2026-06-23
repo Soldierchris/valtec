@@ -117,7 +117,15 @@ function filaHTML(p) {
             <td style="white-space: nowrap;"><small class="text-muted">${p.colaborador_rut}</small></td>
             <td>${p.nombre_completo}</td>
             <td>${p.sector || '—'}</td>
-            <td><small>${p.descripcion || '—'}</small></td>
+            <td>
+                <div class="d-flex align-items-center justify-content-between">
+                    <small id="desc-${p.id}">${p.descripcion || '—'}</small>
+                    <button class="btn btn-sm btn-link text-decoration-none btn-editar p-0 ms-2"
+                            data-id="${p.id}"
+                            data-desc="${p.descripcion || ''}"
+                            title="Editar descripción">✏️</button>
+                </div>
+            </td>
             <td class="text-center">
                 <span class="badge ${p.notificaciones > 0 ? 'bg-primary' : 'bg-secondary'}">${p.notificaciones}</span>
             </td>
@@ -148,6 +156,7 @@ function bindEvents() {
         if (e.target.closest('#btn-add-uniforme'))  abrirModalAdd();
         if (e.target.closest('.btn-notificar'))     handleNotificar(e.target.closest('.btn-notificar'));
         if (e.target.closest('.btn-cerrar'))        handleCerrar(e.target.closest('.btn-cerrar'));
+        if (e.target.closest('.btn-editar'))        handleEditar(e.target.closest('.btn-editar')); // ← NUEVO
     });
 
     // Escuchar el cambio en el selector de orden
@@ -349,6 +358,30 @@ async function handleCerrar(btn) {
         mostrarToast('❌ Error al cerrar el registro', 'danger');
         btn.disabled  = false;
         btn.innerHTML = '✔️ Cerrar';
+    }
+}
+
+// ── Editar Descripción ────────────────────────────────────────
+async function handleEditar(btn) {
+    const id = btn.dataset.id;
+    const descActual = btn.dataset.desc;
+
+    // Usamos un prompt sencillo para pedir la nueva descripción
+    const nuevaDesc = prompt("✏️ Editar descripción del artículo:", descActual);
+
+    // Si el usuario cancela o no cambia nada, salimos
+    if (nuevaDesc === null || nuevaDesc.trim() === descActual.trim()) return;
+
+    try {
+        btn.disabled = true;
+        await uniformesAPI.actualizar(id, { descripcion: nuevaDesc.trim() });
+        mostrarToast('✏️ Descripción actualizada correctamente', 'success');
+        await renderTabla(); // Recarga la tabla para mostrar el cambio
+        bindEvents();
+    } catch (err) {
+        console.error('[uniformes] Error al actualizar:', err);
+        mostrarToast('❌ Error al actualizar descripción', 'danger');
+        btn.disabled = false;
     }
 }
 

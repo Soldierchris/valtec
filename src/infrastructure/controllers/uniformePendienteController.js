@@ -126,5 +126,23 @@ async function cerrar(req, res) {
         res.status(500).json({ error: 'Error al cerrar el registro' });
     }
 }
+// ── PUT /api/uniformes-pendientes/:id ─────────────────────────
+async function actualizar(req, res) {
+    const { id } = req.params;
+    const { descripcion } = req.body;
 
-module.exports = { listar, crear, notificar, cerrar };
+    try {
+        const ok = await repo.actualizarDescripcion(id, descripcion);
+        if (!ok) {
+            return res.status(404).json({ error: 'Registro no encontrado o ya cerrado' });
+        }
+        res.json({ mensaje: 'Descripción actualizada correctamente' });
+    } catch (err) {
+        console.error('[uniformes] Error al actualizar:', err);
+        res.status(500).json({ error: 'Error al actualizar el registro' });
+    }
+}
+
+// Asegúrate de agregar "actualizar" al module.exports al final:
+module.exports = { listar, crear, notificar, cerrar, actualizar };
+//module.exports = { listar, crear, notificar, cerrar };
