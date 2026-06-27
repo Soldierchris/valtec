@@ -75,6 +75,11 @@ async function renderTabla(forceFetch = true) {
                     </select>
                 </div>
 
+                <!-- BOTÓN IMPRIMIR -->
+                <button class="btn btn-outline-secondary btn-sm shadow-sm" id="btn-imprimir-uniformes">
+                    🖨️ Imprimir
+                </button>
+
                 <!-- BOTÓN ADD -->
                 <button class="btn btn-primary btn-sm shadow-sm" id="btn-add-uniforme">
                     ➕ Add
@@ -153,8 +158,9 @@ function bindEvents() {
     if (!contenedor) return;
 
     contenedor.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-add-uniforme'))  abrirModalAdd();
-        if (e.target.closest('.btn-notificar'))     handleNotificar(e.target.closest('.btn-notificar'));
+        if (e.target.closest('#btn-add-uniforme'))      abrirModalAdd();
+        if (e.target.closest('#btn-imprimir-uniformes')) imprimirUniformes();
+        if (e.target.closest('.btn-notificar'))          handleNotificar(e.target.closest('.btn-notificar'));
         if (e.target.closest('.btn-cerrar'))        handleCerrar(e.target.closest('.btn-cerrar'));
         if (e.target.closest('.btn-editar'))        handleEditar(e.target.closest('.btn-editar')); // ← NUEVO
     });
@@ -414,6 +420,120 @@ function mostrarToast(mensaje, tipo = 'success') {
     const el = document.getElementById(id);
     new bootstrap.Toast(el, { delay: 3500 }).show();
     el.addEventListener('hidden.bs.toast', () => el.remove());
+}
+
+// ── Imprimir ──────────────────────────────────────────────────
+function imprimirUniformes() {
+    // Usa la lista ya ordenada que está en memoria — sin fetch adicional
+    const listaOrdenada = [...pendientes].sort((a, b) => {
+        switch (criterioOrden) {
+            case 'ingreso':        return new Date(a.fecha_ingreso) - new Date(b.fecha_ingreso);
+            case 'rut':            return a.colaborador_rut.localeCompare(b.colaborador_rut);
+            case 'nombre':         return (a.nombre_completo || '').localeCompare(b.nombre_completo || '');
+            case 'sector':         return (a.sector || '').localeCompare(b.sector || '');
+            case 'descripcion':    return (a.descripcion || '').localeCompare(b.descripcion || '');
+            case 'notificaciones': return b.notificaciones - a.notificaciones;
+            case 'dias':           return b.dias_en_bodega - a.dias_en_bodega;
+            default:               return 0;
+        }
+    });
+
+    const fechaImpresion = new Date().toLocaleString('es-CL', {
+        timeZone: 'America/Santiago',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    });
+
+    const filas = listaOrdenada.map((p, i) => {
+        const dias = Number(p.dias_en_bodega);
+        const colorDias = dias <= 3 ? '#16a34a' : dias <= 7 ? '#d97706' : '#dc2626';
+        return `
+            <tr class="${i % 2 === 0 ? 'fila-par' : ''}">
+                <td>${i + 1}</td>
+                <td>${formatFecha(p.fecha_ingreso)}</td>
+                <td>${p.colaborador_rut}</td>
+                <td>${p.nombre_completo}</td>
+                <td>${p.sector || '—'}</td>
+                <td>${p.descripcion || 'Artículo pendiente de retiro'}</td>
+                <td style="text-align:center">${p.notificaciones}</td>
+                <td style="text-align:center; color:${colorDias}; font-weight:700">${dias} día${dias !== 1 ? 's' : ''}</td>
+            </tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Uniformes Pendientes — VALTEC</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #111; padding: 20px; }
+
+        .encabezado { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; }
+        .encabezado h1 { font-size: 15px; color: #1e3a5f; }
+        .encabezado .meta { font-size: 10px; color: #555; text-align: right; }
+
+        .resumen { margin-bottom: 12px; font-size: 11px; }
+        .resumen strong { color: #1e3a5f; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background-color: #1e3a5f; color: #fff; }
+        thead th { padding: 7px 8px; text-align: left; font-size: 10px; letter-spacing: 0.4px; }
+        tbody td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        tbody .fila-par { background-color: #f8fafc; }
+
+        .pie { margin-top: 20px; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; text-align: center; }
+
+        @page { size: A4 landscape; margin: 15mm; }
+    </style>
+</head>
+<body>
+    <div class="encabezado">
+        <div>
+            <h1>📦 Uniformes y Artículos Pendientes de Retiro</h1>
+            <div style="color:#555; font-size:10px; margin-top:4px;">Bodega Central — VALTEC Logística</div>
+        </div>
+        <div class="meta">
+            <div>Impreso: ${fechaImpresion}</div>
+        </div>
+    </div>
+
+    <div class="resumen">
+        Total pendientes: <strong>${listaOrdenada.length}</strong> &nbsp;|&nbsp;
+        Ordenado por: <strong>${criterioOrden.charAt(0).toUpperCase() + criterioOrden.slice(1)}</strong>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Fecha Ingreso</th>
+                <th>RUT</th>
+                <th>Nombre</th>
+                <th>Sector</th>
+                <th>Descripción</th>
+                <th style="text-align:center">Avisos</th>
+                <th style="text-align:center">Días en Bodega</th>
+            </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+    </table>
+
+    <div class="pie">
+        Este documento es generado automáticamente por el sistema VALTEC Logística. — ${fechaImpresion}
+    </div>
+</body>
+</html>`;
+
+    const ventana = window.open('', '_blank', 'width=1000,height=700');
+    ventana.document.write(html);
+    ventana.document.close();
+    ventana.focus();
+    // Pequeño delay para que el navegador termine de renderizar antes de abrir el diálogo
+    setTimeout(() => {
+        ventana.print();
+        ventana.close();
+    }, 300);
 }
 
 function confirmar(titulo, subtitulo = '') {
