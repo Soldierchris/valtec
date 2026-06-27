@@ -6,18 +6,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VALTEC - Inventario Bodega</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f9fa;
         }
 
         .sidebar {
-             min-height: 100vh;
-    height: auto;
-    background: #212529;
-    color: white;
-    padding: 20px;
-    overflow-y: auto;
+            min-height: 100vh;
+            height: auto;
+            background: #212529;
+            color: white;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        /* ── Accordion sidebar ── */
+        .vsb-brand { color:#fff; font-size:18px; font-weight:500; margin-bottom:4px; }
+        .vsb-hr    { border:none; border-top:1px solid rgba(255,255,255,0.12); margin:10px 0 12px; }
+        .vsb-group { margin-bottom:5px; border-radius:8px; overflow:hidden; }
+
+        .vsb-header {
+            display:flex; align-items:center; gap:8px;
+            width:100%; padding:10px 12px; border:none; cursor:pointer;
+            border-radius:8px; font-size:14px; font-weight:500;
+            text-align:left; transition:filter 0.15s;
+        }
+        .vsb-header:hover  { filter:brightness(1.2); }
+        .vsb-header i      { font-size:17px; flex-shrink:0; }
+        .vsb-chevron       { margin-left:auto; font-size:15px; transition:transform 0.2s; }
+        .vsb-header.open .vsb-chevron { transform:rotate(180deg); }
+
+        .vsb-items         { display:none; padding:3px 0 5px; }
+        .vsb-items.open    { display:block; }
+
+        .vsb-btn {
+            display:flex; align-items:center; gap:8px;
+            width:100%; padding:9px 12px 9px 30px;
+            border:none; font-size:14px; font-weight:500;
+            cursor:pointer; border-radius:6px; text-align:left;
+            transition:filter 0.12s;
+        }
+        .vsb-btn:hover { filter:brightness(1.3); }
+        .vsb-btn i     { font-size:16px; flex-shrink:0; }
+
+        /* Headers de grupo */
+        .g-reportes    .vsb-header { background:rgba(255,255,255,0.10); color:#e2e8f0; }
+        .g-inventario  .vsb-header { background:rgba(234,179,8,0.25);   color:#fbbf24; }
+        .g-operaciones .vsb-header { background:rgba(59,130,246,0.25);  color:#93c5fd; }
+        .g-consultas   .vsb-header { background:rgba(20,184,166,0.20);  color:#5eead4; }
+
+        /* Variantes de ítems */
+        .vsb-btn-neutral { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.75); }
+        .vsb-btn-green   { background:rgba(34,197,94,0.22);   color:#86efac; }
+        .vsb-btn-blue    { background:rgba(59,130,246,0.22);  color:#93c5fd; }
+        .vsb-btn-red     { background:rgba(239,68,68,0.22);   color:#fca5a5; }
+
+        .vsb-badge {
+            background:#ef4444; color:#fff; font-size:10px;
+            padding:1px 6px; border-radius:10px; margin-left:auto;
         }
 
         .card {
@@ -65,37 +112,101 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-2 sidebar"> <!-- BOTONES DEL MENU LATERAL -->
-                <h4>VALTEC</h4>
-                <hr>
-                <button class="btn btn-outline-light w-100 mb-2" onclick="cargarFormularios('LATAM')">Reporte
-                    LATAM</button>
-                <button class="btn btn-outline-light w-100 mb-2" onclick="cargarFormularios('SKY')">Reporte SKY</button>
-                <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarTablets()">Listado Tablets</button>
-                <button class="btn btn-outline-warning w-100 mb-2" onclick="cargarBodegaSeguridad()">Inventario Bodega
-                    Seguridad</button>
-                <button class="btn w-100 mb-2" style="background-color:#1a6b3a; color:white;" onclick="cargarBodegaGrande()">📦
-                    Inventario Bodega Grande</button>
-                <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalColaborador">+Nuevo
-                    Colaborador</button>
-                <button class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalProducto">+Nuevo
-                    Producto</button>
-                <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalIngreso">+ Nuevo
-                    Ingreso</button>
-                <!-- ><button type="button" class="btn btn-primary" onclick="confirmarIngreso()">Registrar Movimiento</button>-->
-                <button class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalEntrega">Registrar
-                    (Entrega)</button>
-                <button class="btn btn-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalDevolucion">↩️ Registrar
-                    Devolución</button>
-                <button class="btn btn-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalTrazabilidad">🔍 Custodia de
-                    Activo</button>
-                <button class="btn btn-outline-info w-100 mb-2" onclick="cargarVistaTrazabilidad()">📋 Trazabilidad</button>
-                <button class="btn btn-outline-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalCustodia">👤 Custodio
-                    por RUT</button>
-                <button class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalUniformesPendientes">
-                    📦 Pendientes
-                </button>
+            <div class="col-md-2 sidebar"> <!-- MENU LATERAL ACCORDION -->
+
+                <div class="vsb-brand">
+                    <i class="ti ti-building-warehouse" style="font-size:17px;vertical-align:-3px;margin-right:5px;" aria-hidden="true"></i>VALTEC
                 </div>
+                <hr class="vsb-hr">
+
+                <!-- ── REPORTES ── -->
+                <div class="vsb-group g-reportes">
+                    <button class="vsb-header open" onclick="vsbToggle(this)" aria-expanded="true">
+                        <i class="ti ti-file-text" aria-hidden="true"></i>
+                        Reportes
+                        <i class="ti ti-chevron-down vsb-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="vsb-items open">
+                        <button class="vsb-btn vsb-btn-neutral" onclick="cargarFormularios('LATAM')">
+                            <i class="ti ti-plane" aria-hidden="true"></i>LATAM
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" onclick="cargarFormularios('SKY')">
+                            <i class="ti ti-plane" aria-hidden="true"></i>SKY
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" onclick="cargarTablets()">
+                            <i class="ti ti-device-tablet" aria-hidden="true"></i>Tablets
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── INVENTARIO ── -->
+                <div class="vsb-group g-inventario" style="margin-top:4px;">
+                    <button class="vsb-header open" onclick="vsbToggle(this)" aria-expanded="true">
+                        <i class="ti ti-packages" aria-hidden="true"></i>
+                        Inventario
+                        <i class="ti ti-chevron-down vsb-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="vsb-items open">
+                        <button class="vsb-btn vsb-btn-neutral" onclick="cargarBodegaSeguridad()">
+                            <i class="ti ti-shield" aria-hidden="true"></i>Bodega Seguridad
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" onclick="cargarBodegaGrande()">
+                            <i class="ti ti-package" aria-hidden="true"></i>Bodega Grande
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── OPERACIONES ── -->
+                <div class="vsb-group g-operaciones" style="margin-top:4px;">
+                    <button class="vsb-header open" onclick="vsbToggle(this)" aria-expanded="true">
+                        <i class="ti ti-arrows-exchange" aria-hidden="true"></i>
+                        Operaciones
+                        <i class="ti ti-chevron-down vsb-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="vsb-items open">
+                        <button class="vsb-btn vsb-btn-neutral" data-bs-toggle="modal" data-bs-target="#modalColaborador">
+                            <i class="ti ti-user-plus" aria-hidden="true"></i>Nuevo colaborador
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" data-bs-toggle="modal" data-bs-target="#modalProducto">
+                            <i class="ti ti-box" aria-hidden="true"></i>Nuevo producto
+                        </button>
+                        <button class="vsb-btn vsb-btn-green" data-bs-toggle="modal" data-bs-target="#modalIngreso">
+                            <i class="ti ti-arrow-bar-to-down" aria-hidden="true"></i>Nuevo ingreso
+                        </button>
+                        <button class="vsb-btn vsb-btn-blue" data-bs-toggle="modal" data-bs-target="#modalEntrega">
+                            <i class="ti ti-arrow-bar-right" aria-hidden="true"></i>Registrar entrega
+                        </button>
+                        <button class="vsb-btn vsb-btn-red" data-bs-toggle="modal" data-bs-target="#modalDevolucion">
+                            <i class="ti ti-arrow-back" aria-hidden="true"></i>Registrar devolución
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── CONSULTAS ── -->
+                <div class="vsb-group g-consultas" style="margin-top:4px;">
+                    <button class="vsb-header open" onclick="vsbToggle(this)" aria-expanded="true">
+                        <i class="ti ti-search" aria-hidden="true"></i>
+                        Consultas
+                        <i class="ti ti-chevron-down vsb-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="vsb-items open">
+                        <button class="vsb-btn vsb-btn-neutral" data-bs-toggle="modal" data-bs-target="#modalTrazabilidad">
+                            <i class="ti ti-scan" aria-hidden="true"></i>Custodia de activo
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" onclick="cargarVistaTrazabilidad()">
+                            <i class="ti ti-list-details" aria-hidden="true"></i>Trazabilidad
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" data-bs-toggle="modal" data-bs-target="#modalCustodia">
+                            <i class="ti ti-id" aria-hidden="true"></i>Custodio por RUT
+                        </button>
+                        <button class="vsb-btn vsb-btn-neutral" data-bs-toggle="modal" data-bs-target="#modalUniformesPendientes">
+                            <i class="ti ti-clock-hour-4" aria-hidden="true"></i>Pendientes
+                            <span class="vsb-badge">!</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
 
             <main class="col-md-10 p-4">
                 <div
@@ -766,6 +877,13 @@ window.ccEliminar  = ccEliminar;
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function vsbToggle(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+    btn.setAttribute('aria-expanded', btn.classList.contains('open'));
+}
+</script>
     
     <script type="module" src="js/main.js"></script>
 
