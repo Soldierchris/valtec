@@ -451,7 +451,7 @@ function imprimirUniformes() {
             <tr class="${i % 2 === 0 ? 'fila-par' : ''}">
                 <td>${i + 1}</td>
                 <td>${formatFecha(p.fecha_ingreso)}</td>
-                <td>${p.colaborador_rut}</td>
+                <td style="white-space:nowrap">${p.colaborador_rut}</td>
                 <td>${p.nombre_completo}</td>
                 <td>${p.sector || '—'}</td>
                 <td>${p.descripcion || 'Artículo pendiente de retiro'}</td>
@@ -508,7 +508,7 @@ function imprimirUniformes() {
             <tr>
                 <th>#</th>
                 <th>Fecha Ingreso</th>
-                <th>RUT</th>
+                <th style="white-space:nowrap">RUT</th>
                 <th>Nombre</th>
                 <th>Sector</th>
                 <th>Descripción</th>
