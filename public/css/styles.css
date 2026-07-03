@@ -11,3 +11,10 @@
     letter-spacing: 0.3px;
     text-transform: uppercase; /* opcional — le da un look más "sistema/dashboard" */
 }
+/* No los esta tomando 
+Creado issue en Git 
+*/
+h1, h2 {
+    color: #0f172a;
+    font-weight: 600; /* si no lo tiene ya */
+}

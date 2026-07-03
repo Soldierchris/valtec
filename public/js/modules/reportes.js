@@ -6,7 +6,6 @@
 
 import { obtenerFormulariosPorAerolinea, obtenerTablets } from '../api/colaboradores.api.js';
 import { obtenerBodegaSeguridad, obtenerBodegaGrande }   from '../api/movimientos.api.js';
-
 // ── HELPERS ──────────────────────────────────────────────────
 
 function _setTitulo(texto) {
