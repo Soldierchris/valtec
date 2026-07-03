@@ -48,6 +48,7 @@ export async function cargarFormularios(aerolinea) {
                 </tr>`).join(''));
         }
         _setTitulo(`Inventario de Formularios: ${aerolinea}`);
+        _mostrarBotonImprimir();
     } catch (err) {
         console.error('Error cargando formularios:', err);
         _setCuerpo(`<tr><td colspan="4" class="text-center text-danger">Error: ${err.message}</td></tr>`);
@@ -78,6 +79,7 @@ export async function cargarTablets() {
                 <td>${t.ubicacion || 'Sin asignar'}</td>
             </tr>`).join(''));
         _setTitulo('Inventario General de Tablets');
+        _mostrarBotonImprimir();
     } catch (err) {
         console.error('Error cargando tablets:', err);
         _setCuerpo('<tr><td colspan="6" class="text-center text-danger">Error al cargar tablets</td></tr>');
@@ -110,6 +112,7 @@ export async function cargarBodegaSeguridad() {
                 </tr>`).join(''));
         }
         _setTitulo('Inventario Bodega Seguridad');
+        _mostrarBotonImprimir();
     } catch (err) {
         console.error('Error bodega seguridad:', err);
         _setCuerpo('<tr><td colspan="5" class="text-center text-danger">Error al cargar inventario</td></tr>');
@@ -143,8 +146,84 @@ export async function cargarBodegaGrande() {
                 </tr>`).join(''));
         }
         _setTitulo('Inventario Bodega Grande');
+        _mostrarBotonImprimir();
     } catch (err) {
         console.error('Error bodega grande:', err);
         _setCuerpo('<tr><td colspan="6" class="text-center text-danger">Error al cargar inventario</td></tr>');
     }
 }
+
+// Mostrar el botón de imprimir cuando se carga cualquier reporte
+function _mostrarBotonImprimir() {
+    const btn = document.getElementById('btn-imprimir-reporte');
+    if (btn) btn.classList.remove('d-none');
+}
+
+// Lógica para imprimir la tabla actual
+export function imprimirReporte() {
+    const titulo = document.getElementById('titulo-reporte').innerText;
+    const cabecera = document.querySelector('thead').innerHTML;
+    const cuerpo = document.getElementById('tabla-cuerpo').innerHTML;
+
+    const fechaImpresion = new Date().toLocaleString('es-CL', {
+        timeZone: 'America/Santiago',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    });
+
+    const html = `<!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>${titulo} — VALTEC</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; font-size: 12px; color: #111; padding: 20px; }
+            .encabezado { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; }
+            .encabezado h1 { font-size: 16px; color: #1e3a5f; }
+            .meta { font-size: 10px; color: #555; text-align: right; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            thead tr { background-color: #1e3a5f; color: #fff; }
+            thead th { padding: 8px; text-align: left; }
+            tbody td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+            .pie { margin-top: 20px; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; text-align: center; }
+            @page { size: A4 landscape; margin: 15mm; }
+        </style>
+    </head>
+    <body>
+        <div class="encabezado">
+            <div>
+                <h1>📦 ${titulo}</h1>
+                <div style="color:#555; font-size:11px; margin-top:4px;">VALTEC Logística</div>
+            </div>
+            <div class="meta">
+                <div>Impreso: ${fechaImpresion}</div>
+            </div>
+        </div>
+        <table>
+            <thead>${cabecera}</thead>
+            <tbody>${cuerpo}</tbody>
+        </table>
+        <div class="pie">
+            Documento generado automáticamente por el sistema VALTEC. — ${fechaImpresion}
+        </div>
+    </body>
+    </html>`;
+
+    const ventana = window.open('', '_blank', 'width=1000,height=700');
+    ventana.document.write(html);
+    ventana.document.close();
+    ventana.focus();
+    setTimeout(() => {
+        ventana.print();
+        ventana.close();
+    }, 300);
+}
+
+// Vincular el evento de clic al botón (puedes poner esto al inicio del archivo o en una función init)
+document.addEventListener('DOMContentLoaded', () => {
+    const btnImprimir = document.getElementById('btn-imprimir-reporte');
+    if (btnImprimir) {
+        btnImprimir.addEventListener('click', imprimirReporte);
+    }
+});
