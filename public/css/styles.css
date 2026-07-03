@@ -1,0 +1,13 @@
+/* public/css/styles.css */
+.table-dark {
+    --bs-table-bg: #1e293b;
+    --bs-table-color: #ffffff;
+    --bs-table-border-color: #334155;
+}
+
+.table-dark th {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase; /* opcional — le da un look más "sistema/dashboard" */
+}

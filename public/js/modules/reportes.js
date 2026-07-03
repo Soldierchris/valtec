@@ -32,7 +32,7 @@ function _badgeStock(stock) {
 
 export async function cargarFormularios(aerolinea) {
     _setTitulo(`Cargando Inventario ${aerolinea}...`);
-    _setCabecera(`<tr><th>ID</th><th>Descripción</th><th>Tipo Documento</th><th>Stock Disponible</th></tr>`);
+    _setCabecera(`<tr><th>ID</th><th>Descripción</th><th>Codigo</th><th>Stock </th></tr>`);
 
     try {
         const datos = await obtenerFormulariosPorAerolinea(aerolinea);
@@ -92,7 +92,7 @@ export async function cargarBodegaSeguridad() {
     _setCabecera(`
         <tr>
             <th>ID</th><th>Descripción</th><th>Modelo</th>
-            <th>N° de Serie</th><th>Stock Disponible</th>
+            <th>N° de Serie</th><th>Stock</th>
         </tr>`);
 
     try {
@@ -124,7 +124,7 @@ export async function cargarBodegaGrande() {
     _setCabecera(`
         <tr>
             <th>ID</th><th>Descripción</th><th>Categoría</th>
-            <th>Modelo</th><th>N° de Serie</th><th>Stock Disponible</th>
+            <th>Modelo</th><th>N° de Serie</th><th>Stock</th>
         </tr>`);
 
     try {
