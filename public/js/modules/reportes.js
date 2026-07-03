@@ -91,7 +91,7 @@ export async function cargarBodegaSeguridad() {
     _setCabecera(`
         <tr>
             <th>ID</th><th>Descripción</th><th>Modelo</th>
-            <th>N° de Serie</th><th>Stock</th>
+            <th>Serie</th><th>Stock</th>
         </tr>`);
 
     try {
@@ -123,7 +123,7 @@ export async function cargarBodegaGrande() {
     _setCabecera(`
         <tr>
             <th>ID</th><th>Descripción</th><th>Categoría</th>
-            <th>Modelo</th><th>N° de Serie</th><th>Stock</th>
+            <th>Modelo</th><th>Serie</th><th>Stock</th>
         </tr>`);
 
     try {
