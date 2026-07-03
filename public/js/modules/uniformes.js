@@ -95,13 +95,13 @@ async function renderTabla(forceFetch = true) {
                    <table class="table table-hover table-sm align-middle mb-0">
                        <thead class="table-dark">
                            <tr>
-                               <th>Fecha ingreso</th>
+                               <th>ingreso</th>
                                <th>RUT</th>
                                <th>Nombre</th>
                                <th>Sector</th>
                                <th>Descripción</th>
                                <th class="text-center">Avisos</th>
-                               <th class="text-center">Días en bodega</th>
+                               <th class="text-center">Permanencia</th>
                                <th class="text-center">Acciones</th>
                            </tr>
                        </thead>
