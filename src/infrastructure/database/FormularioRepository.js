@@ -22,7 +22,7 @@ class FormularioRepository {
             LEFT JOIN movimiento m ON p.id_articulo = m.id_articulo
             WHERE df.aerolinea = ?
             GROUP BY p.id_articulo
-             ORDER BY p.descripcion
+            ORDER BY p.descripcion
         `;
 
         try {
