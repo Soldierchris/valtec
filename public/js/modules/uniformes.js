@@ -507,13 +507,13 @@ function imprimirUniformes() {
         <thead>
             <tr>
                 <th>#</th>
-                <th>Fecha Ingreso</th>
+                <th>Ingreso</th>
                 <th style="white-space:nowrap">RUT</th>
                 <th>Nombre</th>
                 <th>Sector</th>
                 <th>Descripción</th>
                 <th style="text-align:center">Avisos</th>
-                <th style="text-align:center">Días en Bodega</th>
+                <th style="text-align:center">Permanencia</th>
             </tr>
         </thead>
         <tbody>${filas}</tbody>
