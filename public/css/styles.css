@@ -18,3 +18,72 @@ h1, h2 {
     color: #0f172a;
     font-weight: 600; /* si no lo tiene ya */
 }
+
+/* ── Sobreescritura de Bootstrap "info" → paleta VALTEC ── */
+.modal-header.bg-info {
+    background-color: #1e293b !important; /* slate oscuro, igual que headers de tabla */
+    color: #ffffff !important;
+}
+
+.modal-header.bg-info .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%); /* botón X visible en fondo oscuro */
+}
+
+.btn-info {
+    background-color: #1e293b !important;
+    border-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+.btn-info:hover {
+    background-color: #1e293b !important; /* el tono aún más oscuro que usas en títulos */
+    border-color: #1e293b !important;
+}
+
+/* Aplica a TODOS los modales de creación/registro */
+.modal-footer .btn-primary {
+    background-color: #1e293b !important;
+    border-color: #1e293b !important;
+}
+
+.modal-footer .btn-primary:hover {
+    background-color: #1e293b !important;
+    border-color: #1e293b !important;
+}
+
+.modal-header.bg-dark {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+.modal-header.bg-dark .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ── Sobreescritura de Bootstrap → paleta VALTEC (headers de modal) ── */
+.modal-header.bg-info,
+.modal-header.bg-primary,
+.modal-header.bg-danger,
+.modal-header.bg-dark {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+.modal-header.bg-info .btn-close,
+.modal-header.bg-primary .btn-close,
+.modal-header.bg-danger .btn-close,
+.modal-header.bg-dark .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ── Botón "Confirmar Devolución" → verde, igual que "Nuevo ingreso" ── */
+#btn-confirmar-dev {
+    background-color: #1e293b !important;  /* mismo verde que usas en notificarDevolucion() y vsb-btn-green */
+    border-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+#btn-confirmar-dev:hover {
+    background-color: #1e293b !important;  /* tono más oscuro para el hover */
+    border-color: #1e293b !important;
+}
